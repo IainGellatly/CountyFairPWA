@@ -69,5 +69,13 @@ button:active {
   margin-bottom: 20px;     /* space before content */
 }
 
-
+#map {
+  position: relative;
+  width: 80%;
+  margin: 0 auto;
+  height: 300px;
+  background: url('/static/map.jpg') center/cover;
+  border-radius: 12px;
+  overflow: hidden;
+}
 

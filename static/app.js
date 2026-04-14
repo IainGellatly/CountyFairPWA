@@ -30,25 +30,49 @@ async function loadEvents(){
   h+=`<div class="card">
    <b>${e.title}</b><br>${e.description}<br>${e.location}<br>${e.start_time}<br>
    ${countdown(e.start_time)}<br>
-   <button onclick="setAlert('${e.start_time}')">🔔 Alert</button>
+   <button onclick="setAlert(${e.id}, '${e.title}', '${e.start_time}')">🔔 Alert</button>
   </div>`;
  });
  document.getElementById('content').innerHTML=h;
 }
 
-function setAlert(t){
- let a=JSON.parse(localStorage.getItem('alerts')||'[]');
- a.push(t); localStorage.setItem('alerts',JSON.stringify(a));
- Notification.requestPermission();
+function setAlert(id, title, time){
+  let alerts = JSON.parse(localStorage.getItem('alerts') || '[]');
+
+  // prevent duplicates
+  if(alerts.find(a => a.id === id)) return;
+
+  alerts.push({ id, title, time });
+  localStorage.setItem('alerts', JSON.stringify(alerts));
+
+  Notification.requestPermission();
 }
 
 function showSchedule(){
- let a=JSON.parse(localStorage.getItem('alerts')||'[]');
- let h='<h2>My Schedule</h2>';
- a.forEach(t=>{
-  h+=`<div class="card">${t}<br>${countdown(t)}</div>`;
- });
- document.getElementById('content').innerHTML=h;
+  let alerts = JSON.parse(localStorage.getItem('alerts') || '[]');
+
+  let h = '<h2>⭐ My Schedule</h2>';
+
+  if(alerts.length === 0){
+    h += '<div class="card">No saved events</div>';
+  }
+
+  alerts.forEach((a, index) => {
+    h += `
+      <div class="card">
+        <b>${a.title}</b><br>
+        ${a.time}<br>
+        ${countdown(a.time)}<br><br>
+        <button onclick="removeAlert(${index})">❌ Remove</button>
+      </div>
+    `;
+  });
+
+  if(alerts.length > 0){
+    h += `<button onclick="clearAlerts()">Clear All</button>`;
+  }
+
+  document.getElementById('content').innerHTML = h;
 }
 
 function showExplore(){
@@ -112,4 +136,16 @@ function showMore(){
    </div>
    <div id="moreContent"></div>
  `;
+}
+
+function removeAlert(index){
+  let alerts = JSON.parse(localStorage.getItem('alerts') || '[]');
+  alerts.splice(index, 1);
+  localStorage.setItem('alerts', JSON.stringify(alerts));
+  showSchedule();
+}
+
+function clearAlerts(){
+  localStorage.removeItem('alerts');
+  showSchedule();
 }
