@@ -11,10 +11,14 @@
 <img src="/static/logo.png" class="logo"/>
 
 <div id="nav">
-<button onclick="show('home')">Home</button>
-<button onclick="loadEvents()">Today's Events</button>
-<button onclick="showExplore()">Explore</button>
-<button onclick="show('schedule')">My Schedule</button>
+<button onclick="showHome()">Home</button>
+<button onclick="loadEvents()">Events</button>
+<button onclick="showMap()">Map</button>
+<button onclick="showSchedule()">My Schedule</button>
+</div>
+
+<div id="installBanner" style="display:none;">
+<button onclick="installApp()">Install App for Notifications</button>
 </div>
 
 <div id="content"></div>
