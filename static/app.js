@@ -52,33 +52,35 @@ function showSchedule(){
 }
 
 function showExplore(){
- document.getElementById('content').innerHTML=`
- <div class="sub">
-  <button onclick="loadFood()">🍔 Food</button>
-  <button onclick="loadMusic()">🎵 Music</button>
-  <button onclick="loadExhibits()">🐄 Exhibits</button>
- </div>`;
+ document.getElementById('content').innerHTML = `
+   <div class="row">
+     <button onclick="loadFood()">🍔 Food</button>
+     <button onclick="loadMusic()">🎵 Music</button>
+     <button onclick="loadExhibits()">🐄 Exhibits</button>
+   </div>
+   <div id="exploreContent"></div>
+ `;
 }
 
 async function loadFood(){
  let r=await fetch('/api/food'); let d=await r.json();
  let h='<h2>Food Vendors</h2>';
  d.forEach(i=>h+=`<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}</div>`);
- document.getElementById('content').innerHTML=h;
+ document.getElementById('exploreContent').innerHTML = h;
 }
 
 async function loadMusic(){
  let r=await fetch('/api/music'); let d=await r.json();
  let h='<h2>Music</h2>';
  d.forEach(i=>h+=`<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.datetime}</div>`);
- document.getElementById('content').innerHTML=h;
+ document.getElementById('exploreContent').innerHTML = h;
 }
 
 async function loadExhibits(){
  let r=await fetch('/api/exhibits'); let d=await r.json();
  let h='<h2>Exhibits</h2>';
  d.forEach(i=>h+=`<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.category}</div>`);
- document.getElementById('content').innerHTML=h;
+ document.getElementById('exploreContent').innerHTML = h;
 }
 
 function showMap(){
@@ -93,9 +95,21 @@ function showMap(){
 }
 
 function showStatic(name){
- document.getElementById('content').innerHTML=`<h2>${name}</h2><div class="card">Sample info for ${name}</div>`;
+ let target = document.getElementById('moreContent') || document.getElementById('content');
+ target.innerHTML = `<h2>${name}</h2><div class="card">Sample info for ${name}</div>`;
 }
 
 if('serviceWorker' in navigator){
  navigator.serviceWorker.register('/static/sw.js');
+}
+
+function showMore(){
+ document.getElementById('content').innerHTML = `
+   <div class="row">
+     <button onclick="showStatic('Restrooms')">🚻 Restrooms</button>
+     <button onclick="showStatic('First Aid')">🚑 First Aid</button>
+     <button onclick="showStatic('About')">ℹ️ About</button>
+   </div>
+   <div id="moreContent"></div>
+ `;
 }

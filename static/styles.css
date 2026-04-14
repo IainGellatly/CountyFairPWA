@@ -1,23 +1,73 @@
 
 body{font-family:Arial;background:#f4f1e8;margin:0;text-align:center}
+
 .logo{width:75%;margin:10px auto}
-.menu button, .sub button{
- display:block;width:90%;margin:8px auto;padding:14px;
- background:linear-gradient(#a47148,#8b5a2b);
- color:white;border:none;border-radius:12px;font-size:17px;
- box-shadow:2px 2px 6px rgba(0,0,0,0.3);
+
+/* Base button style (wood sign look) */
+button {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  padding: 14px;
+
+  font-size: 17px;
+  color: white;
+  border: none;
+  border-radius: 12px;
+
+  background: linear-gradient(#a47148, #8b5a2b);
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+
+  text-align: center;
 }
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
 .card{
  background:white;margin:12px;padding:14px;border-radius:12px;
  box-shadow:0 2px 6px rgba(0,0,0,0.2);
 }
+
 #map{
  position:relative;height:300px;
  background:url('/static/sample_map.jpg') center/cover;
 }
+
 .pin{
  position:absolute;width:18px;height:18px;background:red;border-radius:50%;
 }
+
 .zone{
  position:absolute;border:2px solid rgba(255,255,255,0.6);
 }
+
+/* horizontal button groups */
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px auto;
+  width: 80%;              /* keeps group centered */
+}
+
+/* Make buttons share space evenly but keep wood style */
+.row button {
+  flex: 1;
+  margin: 0;               /* remove vertical stacking margin */
+  width: auto;             /* override block width */
+}
+
+/* spacing below main menu */
+.content-spacer {
+  height: 20px;
+}
+
+.menu {
+  margin-bottom: 20px;     /* space before content */
+}
+
+
+
