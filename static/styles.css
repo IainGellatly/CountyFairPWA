@@ -1,27 +1,10 @@
-body {
-  font-family: sans-serif;
-  background: #f5f2e9;
-  text-align: center;
-}
 
-.logo {
-  width: 80%;
-  margin: 10px auto;
+body { font-family: sans-serif; background:#f4f1e8; text-align:center;}
+.logo{width:80%;margin:10px auto;}
+button{
+ display:block;width:90%;margin:10px auto;padding:15px;
+ font-size:18px;color:#fff;border:none;border-radius:10px;
+ background: linear-gradient(#a47148,#8b5a2b);
+ box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
 }
-
-button {
-  display: block;
-  width: 90%;
-  margin: 10px auto;
-  padding: 15px;
-  font-size: 18px;
-  background: #8b5a2b;
-  color: white;
-  border: none;
-  border-radius: 8px;
-}
-
-.event {
-  border-bottom: 1px solid #ccc;
-  padding: 10px;
-}
+.card{background:#fff;padding:10px;margin:10px;border-radius:8px;}

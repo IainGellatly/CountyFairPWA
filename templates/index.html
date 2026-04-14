@@ -1,28 +1,23 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="manifest" href="/static/manifest.json">
-  <link rel="stylesheet" href="/static/styles.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-
 <div id="app">
-  <img src="/static/logo.png" class="logo" />
+<img src="/static/logo.png" class="logo"/>
 
-  <div id="menu">
-    <button onclick="loadEvents()">Today's Events</button>
-    <button>Week Schedule</button>
-    <button>Map</button>
-    <button>Explore</button>
-    <button>Sponsors</button>
-    <button>Restrooms</button>
-    <button>First Aid</button>
-    <button>About</button>
-    <button onclick="showSchedule()">My Schedule</button>
-  </div>
+<div id="nav">
+<button onclick="show('home')">Home</button>
+<button onclick="loadEvents()">Today's Events</button>
+<button onclick="showExplore()">Explore</button>
+<button onclick="show('schedule')">My Schedule</button>
+</div>
 
-  <div id="content"></div>
+<div id="content"></div>
 </div>
 
 <script src="/static/app.js"></script>
