@@ -1,0 +1,27 @@
+body {
+  font-family: sans-serif;
+  background: #f5f2e9;
+  text-align: center;
+}
+
+.logo {
+  width: 80%;
+  margin: 10px auto;
+}
+
+button {
+  display: block;
+  width: 90%;
+  margin: 10px auto;
+  padding: 15px;
+  font-size: 18px;
+  background: #8b5a2b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+.event {
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+}
