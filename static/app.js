@@ -23,6 +23,17 @@ function countdown(t){
  return min>0?`Starts in ${min} min`:'Started';
 }
 
+function scrollToContent(){
+  const target =
+    document.getElementById('exploreContent') ||
+    document.getElementById('moreContent') ||
+    document.getElementById('content');
+
+  if(target){
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 async function loadEvents(){
  let r=await fetch('/api/events'); let d=await r.json();
  let h='<h2>Today\'s Events</h2>';
@@ -33,7 +44,8 @@ async function loadEvents(){
    <button onclick="setAlert(${e.id}, '${e.title}', '${e.start_time}')">🔔 Alert</button>
   </div>`;
  });
- document.getElementById('content').innerHTML=h;
+document.getElementById('content').innerHTML = h;
+scrollToContent();
 }
 
 function setAlert(id, title, time){
@@ -55,6 +67,8 @@ function showSchedule(){
 
   if(alerts.length === 0){
     h += '<div class="card">No saved events</div>';
+  document.getElementById('content').innerHTML = h;
+  scrollToContent();
   }
 
   alerts.forEach((a, index) => {
@@ -73,54 +87,83 @@ function showSchedule(){
   }
 
   document.getElementById('content').innerHTML = h;
+  scrollToContent();
 }
 
 function showExplore(){
- document.getElementById('content').innerHTML = `
-   <div class="row">
-     <button onclick="loadFood()">🍔 Food</button>
-     <button onclick="loadMusic()">🎵 Music</button>
-     <button onclick="loadExhibits()">🐄 Exhibits</button>
-   </div>
-   <div id="exploreContent"></div>
- `;
+  document.getElementById('content').innerHTML = `
+    <div class="row">
+      <button onclick="loadFood()">🍔 Food</button>
+      <button onclick="loadMusic()">🎵 Music</button>
+      <button onclick="loadExhibits()">🐄 Exhibits</button>
+    </div>
+    <div id="exploreContent"></div>
+  `;
+  scrollToContent();
 }
 
 async function loadFood(){
- let r=await fetch('/api/food'); let d=await r.json();
- let h='<h2>Food Vendors</h2>';
- d.forEach(i=>h+=`<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}</div>`);
- document.getElementById('exploreContent').innerHTML = h;
+  let r = await fetch('/api/food');
+  let d = await r.json();
+
+  let h = '<h2>Food Vendors</h2>';
+  d.forEach(i => {
+    h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}</div>`;
+  });
+
+  document.getElementById('exploreContent').innerHTML = h;
+  scrollToContent();
 }
 
 async function loadMusic(){
- let r=await fetch('/api/music'); let d=await r.json();
- let h='<h2>Music</h2>';
- d.forEach(i=>h+=`<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.datetime}</div>`);
- document.getElementById('exploreContent').innerHTML = h;
+  let r = await fetch('/api/music');
+  let d = await r.json();
+
+  let h = '<h2>Music</h2>';
+  d.forEach(i => {
+    h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.datetime}</div>`;
+  });
+
+  document.getElementById('exploreContent').innerHTML = h;
+  scrollToContent();
 }
 
 async function loadExhibits(){
- let r=await fetch('/api/exhibits'); let d=await r.json();
- let h='<h2>Exhibits</h2>';
- d.forEach(i=>h+=`<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.category}</div>`);
- document.getElementById('exploreContent').innerHTML = h;
+  let r = await fetch('/api/exhibits');
+  let d = await r.json();
+
+  let h = '<h2>Exhibits</h2>';
+  d.forEach(i => {
+    h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.category}</div>`;
+  });
+
+  document.getElementById('exploreContent').innerHTML = h;
+  scrollToContent();
 }
 
 function showMap(){
- document.getElementById('content').innerHTML='<div id="map"></div>';
- navigator.geolocation.getCurrentPosition(()=>{
-  let pin=document.createElement('div');
-  pin.className='pin';
-  pin.style.left='50%';
-  pin.style.top='50%';
-  document.getElementById('map').appendChild(pin);
- });
+  document.getElementById('content').innerHTML = '<div id="map"></div>';
+
+  navigator.geolocation.getCurrentPosition(()=>{
+    let pin = document.createElement('div');
+    pin.className = 'pin';
+    pin.style.left = '50%';
+    pin.style.top = '50%';
+    document.getElementById('map').appendChild(pin);
+  });
+
+  scrollToContent();
 }
 
 function showStatic(name){
- let target = document.getElementById('moreContent') || document.getElementById('content');
- target.innerHTML = `<h2>${name}</h2><div class="card">Sample info for ${name}</div>`;
+  let target = document.getElementById('moreContent') || document.getElementById('content');
+
+  target.innerHTML = `
+    <h2>${name}</h2>
+    <div class="card">Sample info for ${name}</div>
+  `;
+
+  scrollToContent();
 }
 
 if('serviceWorker' in navigator){
@@ -128,14 +171,15 @@ if('serviceWorker' in navigator){
 }
 
 function showMore(){
- document.getElementById('content').innerHTML = `
-   <div class="row">
-     <button onclick="showStatic('Restrooms')">🚻 Restrooms</button>
-     <button onclick="showStatic('First Aid')">🚑 First Aid</button>
-     <button onclick="showStatic('About')">ℹ️ About</button>
-   </div>
-   <div id="moreContent"></div>
- `;
+  document.getElementById('content').innerHTML = `
+    <div class="row">
+      <button onclick="showStatic('Restrooms')">🚻 Restrooms</button>
+      <button onclick="showStatic('First Aid')">🚑 First Aid</button>
+      <button onclick="showStatic('About')">ℹ️ About</button>
+    </div>
+    <div id="moreContent"></div>
+  `;
+  scrollToContent();
 }
 
 function removeAlert(index){
@@ -148,4 +192,33 @@ function removeAlert(index){
 function clearAlerts(){
   localStorage.removeItem('alerts');
   showSchedule();
+}
+
+async function loadSponsors(){
+  let r = await fetch('/api/sponsors');
+  let d = await r.json();
+
+  let gold = '<h2>🥇 Gold Sponsors</h2>';
+  let silver = '<h2>🥈 Silver Sponsors</h2>';
+
+  d.forEach(s => {
+    let card = `
+      <div class="card sponsor">
+        <img src="${s.logo}" class="sponsor-logo"/>
+        <b>${s.name}</b><br>
+        ${s.description}<br><br>
+        <a href="${s.website}" target="_blank">🌐 Website</a><br>
+        📞 ${s.phone}
+      </div>
+    `;
+
+    if(s.tier.toLowerCase() === 'gold'){
+      gold += card;
+    } else {
+      silver += card;
+    }
+  });
+
+  document.getElementById('content').innerHTML = gold + silver;
+  scrollToContent();
 }

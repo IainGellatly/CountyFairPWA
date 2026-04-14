@@ -38,3 +38,19 @@ def music():
 def exhibits():
     rows=fetch("SELECT name,description,location,category FROM exhibits")
     return [{"name":r[0],"description":r[1],"location":r[2],"category":r[3]} for r in rows]
+
+@app.get("/api/sponsors")
+def sponsors():
+    rows = fetch("SELECT name, tier, description, logo, website, phone FROM sponsors")
+
+    return [
+        {
+            "name": r[0],
+            "tier": r[1],
+            "description": r[2],
+            "logo": r[3],
+            "website": r[4],
+            "phone": r[5]
+        }
+        for r in rows
+    ]

@@ -6,6 +6,18 @@ c.execute("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,title TEXT,
 c.execute("CREATE TABLE IF NOT EXISTS food (name TEXT,description TEXT,location TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS music (name TEXT,description TEXT,location TEXT,datetime TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS exhibits (name TEXT,description TEXT,location TEXT,category TEXT)")
+# Sponsors table
+c.execute("""
+CREATE TABLE IF NOT EXISTS sponsors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    tier TEXT,
+    description TEXT,
+    logo TEXT,
+    website TEXT,
+    phone TEXT
+)
+""")
 
 c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
 
@@ -42,6 +54,28 @@ ex=[
 ("Photography","Local artists","Hall D","Arts")
 ]
 for x in ex: c.execute("INSERT INTO exhibits VALUES (?,?,?,?)",x)
+
+c.execute("DELETE FROM sponsors")
+
+sponsors = [
+    ("Wayne Bank", "Gold", "Local community bank serving Wayne County",
+     "/static/logos/bank.png", "https://example.com", "315-555-1234"),
+
+    ("AgriSupply Co.", "Gold", "Farm equipment and supplies",
+     "/static/logos/agri.png", "https://example.com", "315-555-5678"),
+
+    ("Palmyra Diner", "Silver", "Family dining and breakfast specials",
+     "/static/logos/diner.png", "https://example.com", "315-555-9012"),
+
+    ("County Hardware", "Silver", "Tools and hardware supplies",
+     "/static/logos/hardware.png", "https://example.com", "315-555-3456"),
+]
+
+for s in sponsors:
+    c.execute("""
+        INSERT INTO sponsors (name, tier, description, logo, website, phone)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, s)
 
 conn.commit();conn.close()
 print("DB ready")

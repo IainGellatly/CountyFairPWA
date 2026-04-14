@@ -1,7 +1,12 @@
 
 body{font-family:Arial;background:#f4f1e8;margin:0;text-align:center}
 
-.logo{width:75%;margin:10px auto}
+.logo {
+  width: 60%;
+  max-width: 320px;   /* keeps it from getting huge on desktop */
+  margin: 10px auto;
+  display: block;
+}
 
 /* Base button style (wood sign look) */
 button {
@@ -79,3 +84,13 @@ button:active {
   overflow: hidden;
 }
 
+.sponsor {
+  text-align: center;
+}
+
+.sponsor-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
