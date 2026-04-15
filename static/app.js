@@ -1,12 +1,33 @@
-
-let deferredPrompt;
-
 window.addEventListener('beforeinstallprompt', (e)=>{
- e.preventDefault(); deferredPrompt=e;
- document.getElementById('installBanner').style.display='block';
+  console.log("Install prompt available ✅");
+  e.preventDefault();
+  deferredPrompt = e;
 });
 
-function installApp(){ if(deferredPrompt) deferredPrompt.prompt(); }
+function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+
+    deferredPrompt.userChoice.then(choiceResult => {
+      if(choiceResult.outcome === 'accepted'){
+        console.log('User installed the app');
+
+        // Register push AFTER install
+        registerPush();
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    alert("To install:\nTap the menu (⋮) in Chrome and select 'Add to Home Screen'");
+  }
+}
+
+function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    registerPush();   // 👈 ADD THIS
+  }
+}
 
 function parseTime(t){
  let [time,ampm]=t.split(' ');
@@ -35,17 +56,38 @@ function scrollToContent(){
 }
 
 async function loadEvents(){
- let r=await fetch('/api/events'); let d=await r.json();
- let h='<h2>Today\'s Events</h2>';
- d.forEach(e=>{
-  h+=`<div class="card">
-   <b>${e.title}</b><br>${e.description}<br>${e.location}<br>${e.start_time}<br>
-   ${countdown(e.start_time)}<br>
-   <button onclick="setAlert(${e.id}, '${e.title}', '${e.start_time}')">🔔 Alert</button>
-  </div>`;
- });
-document.getElementById('content').innerHTML = h;
-scrollToContent();
+  let r = await fetch('/api/events');
+  let d = await r.json();
+
+let h = `
+  <div class="card">
+    📲 <b>Get Event Reminders</b><br><br>
+    1. Tap the <b>Install App</b> button below<br>
+    2. Add it to your home screen<br>
+    3. Allow notifications when prompted<br><br>
+    <button onclick="installApp()">📲 Install App</button>
+  </div>
+  <h2>📅 Today's Events</h2>
+`;
+
+  d.forEach(e => {
+    h += `
+      <div class="card">
+        <b>${e.title}</b><br>
+        ${e.description}<br>
+        ${e.location}<br>
+        ${e.start_time}<br>
+        ${countdown(e.start_time)}<br><br>
+        <button onclick="setAlert(${e.id}, '${e.title}', '${e.start_time}')">
+          🔔 Alert Me
+        </button>
+      </div>
+    `;
+  });
+
+  document.getElementById('content').innerHTML = h;
+
+  scrollToContent();
 }
 
 function setAlert(id, title, time){
@@ -222,3 +264,28 @@ async function loadSponsors(){
   document.getElementById('content').innerHTML = gold + silver;
   scrollToContent();
 }
+
+async function registerPush(){
+  if (!('serviceWorker' in navigator)) return;
+
+  const reg = await navigator.serviceWorker.ready;
+
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array('PASTE_PUBLIC_KEY')
+  });
+
+  await fetch('/api/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sub)
+  });
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+

@@ -19,6 +19,15 @@ CREATE TABLE IF NOT EXISTS sponsors (
 )
 """)
 
+c.execute("""
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    endpoint TEXT,
+    p256dh TEXT,
+    auth TEXT
+)
+""")
+
 c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
 
 events=[
