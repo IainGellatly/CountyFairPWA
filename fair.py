@@ -15,7 +15,7 @@ VAPID_CLAIMS = {"sub": "mailto:iagellatly@gmail.com"}
 
 CLOUD_SERVICE_NAME = 'fair'
 CLOUD_LOGGING_LEVEL = logging.INFO
-CLOUD_LOG_FILE_NAME = '/home/admin/fair/fair.log'
+CLOUD_LOG_FILE_NAME = 'fair.log'
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8000
 SERVER_TIMEOUT_KEEP_ALIVE = 300
@@ -129,6 +129,37 @@ async def subscribe(request: Request):
 def test_notify():
     send_push("Fair Reminder", "Event starting soon!")
     return {"status": "sent"}
+
+@app.get("/api/alerts")
+def get_alerts():
+    rows = fetch("SELECT event_id FROM alerts")
+    return [r[0] for r in rows]
+
+
+@app.post("/api/alerts/add/{event_id}")
+def add_alert(event_id: int):
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("INSERT OR IGNORE INTO alerts (event_id) VALUES (?)", (event_id,))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "added"}
+
+
+@app.post("/api/alerts/remove/{event_id}")
+def remove_alert(event_id: int):
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("DELETE FROM alerts WHERE event_id = ?", (event_id,))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "removed"}
 
 if __name__ == '__main__':
 

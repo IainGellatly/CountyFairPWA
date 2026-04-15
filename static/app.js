@@ -39,9 +39,17 @@ function parseTime(t){
 }
 
 function countdown(t){
- let diff=parseTime(t)-Date.now();
- let min=Math.floor(diff/60000);
- return min>0?`Starts in ${min} min`:'Started';
+  let diff = parseTime(t) - Date.now();
+  let min = Math.floor(diff / 60000);
+
+  if (min <= 0) return 'Started';
+
+  // Only show countdown if under 120 minutes
+  if (min <= 120) {
+    return `Starts in ${min} min`;
+  }
+
+  return ''; // nothing for long time gaps
 }
 
 function scrollToContent(){
@@ -56,8 +64,13 @@ function scrollToContent(){
 }
 
 async function loadEvents(){
-  let r = await fetch('/api/events');
-  let d = await r.json();
+let [eventsRes, alertsRes] = await Promise.all([
+  fetch('/api/events'),
+  fetch('/api/alerts')
+]);
+
+let d = await eventsRes.json();
+let userAlerts = new Set(await alertsRes.json());
 
 let h = `
   <div class="card">
@@ -77,10 +90,16 @@ let h = `
         ${e.description}<br>
         ${e.location}<br>
         ${e.start_time}<br>
-        ${countdown(e.start_time)}<br><br>
-        <button onclick="setAlert(${e.id}, '${e.title}', '${e.start_time}')">
+        ${countdown(e.start_time) ? countdown(e.start_time) + '<br><br>' : '<br>'}
+        <button
+          class="alert-btn"
+          data-event-id="${e.id}"
+          data-title="${e.title}"
+          data-time="${e.start_time}"
+        >
           🔔 Alert Me
         </button>
+
       </div>
     `;
   });
@@ -88,6 +107,37 @@ let h = `
   document.getElementById('content').innerHTML = h;
 
   scrollToContent();
+
+document.querySelectorAll(".alert-btn").forEach(button => {
+  const eventId = parseInt(button.dataset.eventId);
+
+  if (userAlerts.has(eventId)) {
+    button.classList.add("active");
+    button.textContent = "Remove Alert";
+  }
+
+  button.addEventListener("click", async () => {
+    const isActive = button.classList.contains("active");
+
+    try {
+      if (!isActive) {
+        await fetch(`/api/alerts/add/${eventId}`, { method: "POST" });
+
+        button.classList.add("active");
+        button.textContent = "Remove Alert";
+      } else {
+        await fetch(`/api/alerts/remove/${eventId}`, { method: "POST" });
+
+        button.classList.remove("active");
+        button.textContent = "🔔 Alert Me";
+      }
+    } catch (err) {
+      console.error("Toggle failed", err);
+    }
+  });
+});
+
+
 }
 
 function setAlert(id, title, time){
@@ -246,8 +296,8 @@ async function loadSponsors(){
   d.forEach(s => {
     let card = `
       <div class="card sponsor">
-        <img src="${s.logo}" class="sponsor-logo"/>
-        <b>${s.name}</b><br>
+        <img src="${s.logo}" class="sponsor-logo"/><br>
+        <b class="sponsor-name">${s.name}</b><br>
         ${s.description}<br><br>
         <a href="${s.website}" target="_blank">🌐 Website</a><br>
         📞 ${s.phone}

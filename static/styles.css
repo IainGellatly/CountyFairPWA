@@ -94,3 +94,22 @@ button:active {
   object-fit: contain;
   margin-bottom: 8px;
 }
+
+/* Alert toggle state */
+.alert-btn.active {
+  background: linear-gradient(#2e7d32, #1b5e20); /* dark green */
+}
+
+.sponsor-name {
+  display: block;
+  margin-top: 6px;
+}
+
+.subtitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: #5a4a3f;
+  margin-top: -5px;
+  margin-bottom: 10px;
+}
+

@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 )
 """)
 
+c.execute("CREATE TABLE IF NOT EXISTS alerts (event_id INTEGER PRIMARY KEY);")
+
 c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
 
 events=[
