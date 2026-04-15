@@ -2,7 +2,7 @@
 from database import get_db
 conn=get_db();c=conn.cursor()
 
-c.execute("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,title TEXT,description TEXT,location TEXT,start_time TEXT)")
+c.execute("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,title TEXT,description TEXT,location TEXT,start_time TEXT, end_time text)")
 c.execute("CREATE TABLE IF NOT EXISTS food (name TEXT,description TEXT,location TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS music (name TEXT,description TEXT,location TEXT,datetime TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS exhibits (name TEXT,description TEXT,location TEXT,category TEXT)")
@@ -33,14 +33,14 @@ c.execute("CREATE TABLE IF NOT EXISTS alerts (event_id INTEGER PRIMARY KEY);")
 c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
 
 events=[
-("Opening Ceremony","Kickoff parade","Main Gate","10:00 AM"),
-("Kids Show","Magic and fun","Tent A","11:00 AM"),
-("Tractor Pull","Heavy equipment","Arena","1:00 PM"),
-("Petting Zoo","Family fun","Barn","3:00 PM"),
-("Live Music","Country band","Main Stage","6:00 PM"),
-("Fireworks","Night show","Fairgrounds","9:00 PM")
+("Opening Ceremony","Kickoff parade","Main Gate","10:00 AM", "11:00 AM"),
+("Kids Show","Magic and fun","Tent A","11:00 AM", "12:00 PM"),
+("Tractor Pull","Heavy equipment","Arena","1:00 PM", "3:00 PM"),
+("Petting Zoo","Family fun","Barn","3:00 PM", "4:30 PM"),
+("Live Music","Country band","Main Stage","5:00 PM", "8:00 PM"),
+("Fireworks","Night show","Fairgrounds","9:00 PM", "9:30 PM")
 ]
-for e in events: c.execute("INSERT INTO events (title,description,location,start_time) VALUES (?,?,?,?)",e)
+for e in events: c.execute("INSERT INTO events (title,description,location,start_time, end_time) VALUES (?,?,?,?,?)",e)
 
 food=[
 ("BBQ Shack","Pulled pork & ribs","Food Court"),

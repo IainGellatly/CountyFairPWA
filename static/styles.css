@@ -106,10 +106,14 @@ button:active {
 }
 
 .subtitle {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
   color: #5a4a3f;
   margin-top: -5px;
   margin-bottom: 10px;
 }
 
+.card.active-event {
+  border: 2px solid #2e7d32;
+  background: #f1f8f4;
+}

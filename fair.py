@@ -70,8 +70,18 @@ def fetch(q):
 
 @app.get("/api/events")
 def events():
-    rows=fetch("SELECT id,title,description,location,start_time FROM events ORDER BY start_time")
-    return [{"id":r[0],"title":r[1],"description":r[2],"location":r[3],"start_time":r[4]} for r in rows]
+    rows = fetch("SELECT id,title,description,location,start_time,end_time FROM events ORDER BY start_time")
+    return [
+        {
+            "id": r[0],
+            "title": r[1],
+            "description": r[2],
+            "location": r[3],
+            "start_time": r[4],
+            "end_time": r[5]
+        }
+        for r in rows
+    ]
 
 @app.get("/api/food")
 def food():

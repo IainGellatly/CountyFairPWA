@@ -63,6 +63,27 @@ function scrollToContent(){
   }
 }
 
+function renderAlertButton(e){
+  const now = Date.now();
+  const startTime = parseTime(e.start_time).getTime();
+
+  // Only show button BEFORE event starts
+  if (now >= startTime){
+    return ''; // no button
+  }
+
+  return `
+    <button
+      class="alert-btn"
+      data-event-id="${e.id}"
+      data-title="${e.title}"
+      data-time="${e.start_time}"
+    >
+      🔔 Alert Me
+    </button>
+  `;
+}
+
 async function loadEvents(){
 let [eventsRes, alertsRes] = await Promise.all([
   fetch('/api/events'),
@@ -84,21 +105,16 @@ let h = `
 `;
 
   d.forEach(e => {
-    h += `
-      <div class="card">
+        const activeClass = isEventActive(e.start_time, e.end_time) ? "active-event" : "";
+
+        h += `
+          <div class="card ${activeClass}">
         <b>${e.title}</b><br>
         ${e.description}<br>
         ${e.location}<br>
-        ${e.start_time}<br>
-        ${countdown(e.start_time) ? countdown(e.start_time) + '<br><br>' : '<br>'}
-        <button
-          class="alert-btn"
-          data-event-id="${e.id}"
-          data-title="${e.title}"
-          data-time="${e.start_time}"
-        >
-          🔔 Alert Me
-        </button>
+        ${e.start_time} - ${e.end_time}<br>
+        ${getEventStatus(e.start_time, e.end_time)}<br><br>
+        ${renderAlertButton(e)}
 
       </div>
     `;
@@ -138,6 +154,27 @@ document.querySelectorAll(".alert-btn").forEach(button => {
 });
 
 
+}
+
+function getEventStatus(start, end){
+  const now = Date.now();
+  const startTime = parseTime(start).getTime();
+  const endTime = parseTime(end).getTime();
+
+  if (now < startTime){
+    const min = Math.floor((startTime - now) / 60000);
+
+    if (min <= 120){
+      return `<b>Starts in ${min} min</b>`;
+    }
+    return ''; // no message if far away
+  }
+
+  if (now >= startTime && now <= endTime){
+    return `<b>Happening Now</b>`;
+  }
+
+  return `<b>Ended</b>`;
 }
 
 function setAlert(id, title, time){
@@ -313,6 +350,14 @@ async function loadSponsors(){
 
   document.getElementById('content').innerHTML = gold + silver;
   scrollToContent();
+}
+
+function isEventActive(start, end){
+  const now = Date.now();
+  const startTime = parseTime(start).getTime();
+  const endTime = parseTime(end).getTime();
+
+  return now >= startTime && now <= endTime;
 }
 
 async function registerPush(){
