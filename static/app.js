@@ -1,3 +1,5 @@
+let deferredPrompt;
+
 window.addEventListener('beforeinstallprompt', (e)=>{
   console.log("Install prompt available ✅");
   e.preventDefault();
@@ -19,13 +21,6 @@ function installApp(){
     });
   } else {
     alert("To install:\nTap the menu (⋮) in Chrome and select 'Add to Home Screen'");
-  }
-}
-
-function installApp(){
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    registerPush();   // 👈 ADD THIS
   }
 }
 
@@ -91,7 +86,16 @@ let [eventsRes, alertsRes] = await Promise.all([
 ]);
 
 let d = await eventsRes.json();
-let userAlerts = new Set(await alertsRes.json());
+let userAlerts = new Set();
+
+try {
+  const alertData = await alertsRes.json();
+  if (Array.isArray(alertData)) {
+    userAlerts = new Set(alertData);
+  }
+} catch (e) {
+  console.log("No alerts yet");
+}
 
 let h = `
   <div class="card">
@@ -127,32 +131,50 @@ let h = `
 document.querySelectorAll(".alert-btn").forEach(button => {
   const eventId = parseInt(button.dataset.eventId);
 
+  // Set initial state
   if (userAlerts.has(eventId)) {
     button.classList.add("active");
     button.textContent = "Remove Alert";
   }
 
   button.addEventListener("click", async () => {
+    console.log("CLICK", eventId);
+
     const isActive = button.classList.contains("active");
 
+    // Always update UI immediately (important)
+    if (!isActive) {
+      button.classList.add("active");
+      button.textContent = "Remove Alert";
+    } else {
+      button.classList.remove("active");
+      button.textContent = "🔔 Alert Me";
+    }
+
     try {
-      if (!isActive) {
-        await fetch(`/api/alerts/add/${eventId}`, { method: "POST" });
+      let endpoint = null;
 
-        button.classList.add("active");
-        button.textContent = "Remove Alert";
-      } else {
-        await fetch(`/api/alerts/remove/${eventId}`, { method: "POST" });
-
-        button.classList.remove("active");
-        button.textContent = "🔔 Alert Me";
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) endpoint = sub.endpoint;
       }
+
+      const url = isActive
+        ? `/api/alerts/remove/${eventId}`
+        : `/api/alerts/add/${eventId}`;
+
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint })
+      });
+
     } catch (err) {
       console.error("Toggle failed", err);
     }
   });
 });
-
 
 }
 
@@ -367,7 +389,7 @@ async function registerPush(){
 
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array('PASTE_PUBLIC_KEY')
+    applicationServerKey: urlBase64ToUint8Array('045b6f1124daa16e3c53958e790006955e11027be85fddbcd4013e5ee90401cd722739fc83a8e7ebe282351310a852e1369e0df61524566ff5c35bc7fc7bb5ec21')
   });
 
   await fetch('/api/subscribe', {
