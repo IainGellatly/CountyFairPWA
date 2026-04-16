@@ -15,13 +15,12 @@ self.addEventListener('push', function(event) {
   if (event.data) {
     try {
       const data = event.data.json();
-      title = data.title;
-      body = data.body;
+      title = data.title || title;
+      body = data.body || body;
     } catch (e) {
-      console.log("Parse error:", e);
+      // ✅ Handle plain text payload (your current case)
+      body = event.data.text();
     }
-  } else {
-    console.log("NO DATA IN PUSH");
   }
 
   event.waitUntil(

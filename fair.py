@@ -43,6 +43,9 @@ logging.basicConfig(
 )
 
 # ---------------- PUSH (NATIVE) ----------------
+from urllib.parse import urlparse
+from py_vapid import Vapid
+
 def send_push(title, message):
     conn = get_db()
     c = conn.cursor()
@@ -50,35 +53,30 @@ def send_push(title, message):
     c.execute("SELECT endpoint, p256dh, auth FROM subscriptions")
     subs = c.fetchall()
 
+    # ✅ Keep this — required for PEM handling
+    vapid = Vapid.from_pem(VAPID_PRIVATE_KEY.encode())
+
     for s in subs:
+        endpoint = s[0]
+
         subscription_info = {
-            "endpoint": s[0],
+            "endpoint": endpoint,
             "keys": {
                 "p256dh": s[1],
                 "auth": s[2]
             }
         }
 
+        # ✅ REQUIRED: correct audience per endpoint
+        parsed = urlparse(endpoint)
+        aud = f"{parsed.scheme}://{parsed.netloc}"
+
+        vapid_claims = {
+            "sub": "mailto:iagellatly@gmail.com",
+            "aud": aud
+        }
+
         try:
-
-            from cryptography.hazmat.primitives import serialization
-
-            print("LEN:", len(VAPID_PRIVATE_KEY))
-            print("START:", VAPID_PRIVATE_KEY[:30])
-            print("END:", VAPID_PRIVATE_KEY[-30:])
-
-            # Try to parse the key explicitly
-            serialization.load_pem_private_key(
-                VAPID_PRIVATE_KEY.encode(),
-                password=None
-            )
-
-            print("PEM PARSE OK")
-
-            from py_vapid import Vapid
-
-            vapid = Vapid.from_pem(VAPID_PRIVATE_KEY.encode())
-
             webpush(
                 subscription_info,
                 data=json.dumps({
@@ -86,16 +84,24 @@ def send_push(title, message):
                     "body": message
                 }),
                 vapid_private_key=vapid,
-                vapid_claims=VAPID_CLAIMS,
+                vapid_claims=vapid_claims,
                 content_encoding="aes128gcm",
-                headers = {
+                headers={
                     "TTL": "60",
-                    "Urgency": "normal"
+                    "Urgency": "normal"   # ✅ keep this
                 }
             )
-
         except WebPushException as ex:
             log.error(f"Push failed: {ex}")
+
+            # ✅ Remove invalid subscriptions
+            if ex.response and ex.response.status_code == 410:
+                conn2 = get_db()
+                c2 = conn2.cursor()
+
+                c2.execute("DELETE FROM subscriptions WHERE endpoint = ?", (endpoint,))
+                conn2.commit()
+                conn2.close()
 
 # ---------------- SCHEDULER ----------------
 def alert_scheduler():
