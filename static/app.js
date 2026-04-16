@@ -7,20 +7,12 @@ window.addEventListener('beforeinstallprompt', (e)=>{
 });
 
 function installApp(){
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-
-    deferredPrompt.userChoice.then(choiceResult => {
-      if(choiceResult.outcome === 'accepted'){
-        console.log('User installed the app');
-
-        // Register push AFTER install
-        registerPush();
-      }
-      deferredPrompt = null;
+  if (window.OneSignal) {
+    OneSignal.push(function() {
+      OneSignal.showSlidedownPrompt();
     });
   } else {
-    alert("To install:\nTap the menu (⋮) in Chrome and select 'Add to Home Screen'");
+    alert("Notifications are not ready yet. Please try again.");
   }
 }
 
@@ -99,11 +91,9 @@ try {
 
 let h = `
   <div class="card">
-    📲 <b>Get Event Reminders</b><br><br>
-    1. Tap the <b>Install App</b> button below<br>
-    2. Add it to your home screen<br>
-    3. Allow notifications when prompted<br><br>
-    <button onclick="installApp()">📲 Install App</button>
+    🔔 <b>Get Event Reminders</b><br><br>
+    Tap the button below to allow push notifications<br><br>
+    <button onclick="installApp()">🔔 Enable Notifications</button>
   </div>
   <h2>📅 Today's Events</h2>
 `;
@@ -382,21 +372,12 @@ function isEventActive(start, end){
   return now >= startTime && now <= endTime;
 }
 
-async function registerPush(){
-  if (!('serviceWorker' in navigator)) return;
-
-  const reg = await navigator.serviceWorker.ready;
-
-  const sub = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array('045b6f1124daa16e3c53958e790006955e11027be85fddbcd4013e5ee90401cd722739fc83a8e7ebe282351310a852e1369e0df61524566ff5c35bc7fc7bb5ec21')
-  });
-
-  await fetch('/api/subscribe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(sub)
-  });
+function registerPush(){
+  if (window.OneSignal) {
+    OneSignal.push(function() {
+      OneSignal.showSlidedownPrompt();
+    });
+  }
 }
 
 function urlBase64ToUint8Array(base64String) {

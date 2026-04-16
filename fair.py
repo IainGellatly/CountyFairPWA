@@ -1,80 +1,90 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from database import get_db
-from fastapi import Request
-from pywebpush import webpush
-import json
 import logging
 import threading
 import time
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+import requests
 
-VAPID_PUBLIC_KEY = "045b6f1124daa16e3c53958e790006955e11027be85fddbcd4013e5ee90401cd722739fc83a8e7ebe282351310a852e1369e0df61524566ff5c35bc7fc7bb5ec21"
-VAPID_PRIVATE_KEY = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgGCd/4kGJdNPyP80SN1NB2aGssbYxp9mrufM9Q4TNFr6hRANCAARbbxEk2qFuPFOVjnkABpVeEQJ76F/dvNQBPl7pBAHNcic5/IOo5+vigjUTEKhS4TaeDfYVJFZv9cNbx/x7tewh"
-VAPID_CLAIMS = {"sub": "mailto:iagellatly@gmail.com"}
+# ---------------- CONFIG ----------------
+ONESIGNAL_APP_ID = "1d4ae603-9a1f-419c-85b7-c26008c471fe"
+ONESIGNAL_API_KEY = "os_v2_app_dvfoma42d5azzbnxyjqarrdr7yialrrjkxhe325eygfqfmnmgax75unh3uyicbdlr5lpslhmpfcelj6rbqcqluhef7sjtwsndklf7ai"
 
 CLOUD_SERVICE_NAME = 'fair'
 CLOUD_LOGGING_LEVEL = logging.INFO
 CLOUD_LOG_FILE_NAME = 'fair.log'
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8000
-SERVER_TIMEOUT_KEEP_ALIVE = 300
-SERVER_WORKERS = 1
 
-
+# ---------------- LOGGING ----------------
 log = logging.getLogger(CLOUD_SERVICE_NAME)
 logging.basicConfig(
     filename=CLOUD_LOG_FILE_NAME,
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=CLOUD_LOGGING_LEVEL,
-    datefmt='%Y-%m-%d %H:%M:%S')
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
+# ---------------- PUSH (ONESIGNAL) ----------------
+def send_push(title, message):
+    headers = {
+        "Authorization": f"Basic {ONESIGNAL_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "app_id": ONESIGNAL_APP_ID,
+        "included_segments": ["All"],
+        "headings": {"en": title},
+        "contents": {"en": message}
+    }
+
+    try:
+        r = requests.post(
+            "https://onesignal.com/api/v1/notifications",
+            headers=headers,
+            json=payload
+        )
+        log.info(f"OneSignal response: {r.status_code} {r.text}")
+    except Exception as e:
+        log.error(f"Push error: {e}")
+
+# ---------------- SCHEDULER ----------------
 def alert_scheduler():
     while True:
         try:
             conn = get_db()
             c = conn.cursor()
 
-            # Get events starting in 10 minutes
             now = datetime.now()
-            target = now + timedelta(minutes=10)
 
             c.execute("""
-                SELECT e.id, e.title, e.start_time, s.endpoint, s.p256dh, s.auth
+                SELECT e.id, e.title, e.start_time
                 FROM events e
                 JOIN alerts a ON e.id = a.event_id
-                JOIN subscriptions s ON a.endpoint = s.endpoint
             """)
 
             rows = c.fetchall()
 
             for r in rows:
-                event_id, title, start_time, endpoint, p256dh, auth = r
+                event_id, title, start_time = r
 
-                event_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M")
+                event_time = datetime.strptime(start_time, "%I:%M %p")
+                event_time = event_time.replace(
+                    year=now.year,
+                    month=now.month,
+                    day=now.day
+                )
 
                 diff = (event_time - now).total_seconds() / 60
 
                 if 9 <= diff <= 10:
-                    subscription_info = {
-                        "endpoint": endpoint,
-                        "keys": {
-                            "p256dh": p256dh,
-                            "auth": auth
-                        }
-                    }
-
-                    webpush(
-                        subscription_info,
-                        data=json.dumps({
-                            "title": "Upcoming Event",
-                            "body": f"{title} starts in 10 minutes"
-                        }),
-                        vapid_private_key=VAPID_PRIVATE_KEY,
-                        vapid_claims=VAPID_CLAIMS
+                    send_push(
+                        "Upcoming Event",
+                        f"{title} starts in 10 minutes"
                     )
 
             conn.close()
@@ -82,32 +92,9 @@ def alert_scheduler():
         except Exception as e:
             log.error(f"Scheduler error: {e}")
 
-        time.sleep(60)  # check every minute
+        time.sleep(60)
 
-def send_push(title, message):
-    conn = get_db()
-    c = conn.cursor()
-
-    c.execute("SELECT endpoint, p256dh, auth FROM subscriptions")
-    rows = c.fetchall()
-    conn.close()
-
-    for r in rows:
-        subscription_info = {
-            "endpoint": r[0],
-            "keys": {
-                "p256dh": r[1],
-                "auth": r[2]
-            }
-        }
-
-        webpush(
-            subscription_info,
-            data=json.dumps({"title": title, "body": message}),
-            vapid_private_key=VAPID_PRIVATE_KEY,
-            vapid_claims=VAPID_CLAIMS
-        )
-
+# ---------------- APP ----------------
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -115,13 +102,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def root():
     return FileResponse("templates/index.html")
 
+# ---------------- HELPERS ----------------
 def fetch(q):
-    conn=get_db();cur=conn.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute(q)
-    rows=cur.fetchall()
+    rows = cur.fetchall()
     conn.close()
     return rows
 
+# ---------------- API ROUTES ----------------
 @app.get("/api/events")
 def events():
     rows = fetch("SELECT id,title,description,location,start_time,end_time FROM events ORDER BY start_time")
@@ -139,23 +129,22 @@ def events():
 
 @app.get("/api/food")
 def food():
-    rows=fetch("SELECT name,description,location FROM food")
-    return [{"name":r[0],"description":r[1],"location":r[2]} for r in rows]
+    rows = fetch("SELECT name,description,location FROM food")
+    return [{"name": r[0], "description": r[1], "location": r[2]} for r in rows]
 
 @app.get("/api/music")
 def music():
-    rows=fetch("SELECT name,description,location,datetime FROM music")
-    return [{"name":r[0],"description":r[1],"location":r[2],"datetime":r[3]} for r in rows]
+    rows = fetch("SELECT name,description,location,datetime FROM music")
+    return [{"name": r[0], "description": r[1], "location": r[2], "datetime": r[3]} for r in rows]
 
 @app.get("/api/exhibits")
 def exhibits():
-    rows=fetch("SELECT name,description,location,category FROM exhibits")
-    return [{"name":r[0],"description":r[1],"location":r[2],"category":r[3]} for r in rows]
+    rows = fetch("SELECT name,description,location,category FROM exhibits")
+    return [{"name": r[0], "description": r[1], "location": r[2], "category": r[3]} for r in rows]
 
 @app.get("/api/sponsors")
 def sponsors():
     rows = fetch("SELECT name, tier, description, logo, website, phone FROM sponsors")
-
     return [
         {
             "name": r[0],
@@ -168,78 +157,45 @@ def sponsors():
         for r in rows
     ]
 
-@app.post("/api/subscribe")
-async def subscribe(request: Request):
-    data = await request.json()
-
-    conn = get_db()
-    c = conn.cursor()
-
-    c.execute("""
-        INSERT INTO subscriptions (endpoint, p256dh, auth)
-        VALUES (?, ?, ?)
-    """, (
-        data['endpoint'],
-        data['keys']['p256dh'],
-        data['keys']['auth']
-    ))
-
-    conn.commit()
-    conn.close()
-
-    return {"status": "subscribed"}
-
-@app.get("/api/test-notify")
-def test_notify():
-    send_push("Fair Reminder", "Event starting soon!")
-    return {"status": "sent"}
-
+# ---------------- ALERTS ----------------
 @app.get("/api/alerts")
 def get_alerts():
     rows = fetch("SELECT event_id FROM alerts")
     return [r[0] for r in rows]
 
-
 @app.post("/api/alerts/add/{event_id}")
 async def add_alert(event_id: int, request: Request):
-    data = await request.json()
-    endpoint = data.get("endpoint")
-
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("""
-        INSERT INTO alerts (endpoint, event_id)
-        VALUES (?, ?)
-    """, (endpoint, event_id))
+    c.execute("INSERT INTO alerts (event_id) VALUES (?)", (event_id,))
 
     conn.commit()
     conn.close()
 
     return {"status": "added"}
 
-
 @app.post("/api/alerts/remove/{event_id}")
-async def remove_alert(event_id: int, request: Request):
-    data = await request.json()
-    endpoint = data.get("endpoint")
-
+async def remove_alert(event_id: int):
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("""
-        DELETE FROM alerts 
-        WHERE event_id = ? AND endpoint = ?
-    """, (event_id, endpoint))
+    c.execute("DELETE FROM alerts WHERE event_id = ?", (event_id,))
 
     conn.commit()
     conn.close()
 
     return {"status": "removed"}
 
-if __name__ == '__main__':
+# ---------------- TEST PUSH ----------------
+@app.get("/api/test-notify")
+def test_notify():
+    send_push("Fair Reminder", "Event starting soon!")
+    return {"status": "sent"}
 
-    log.info('starting main program')
+# ---------------- MAIN ----------------
+if __name__ == '__main__':
+    log.info('Starting Fair App')
 
     threading.Thread(target=alert_scheduler, daemon=True).start()
 
@@ -247,7 +203,5 @@ if __name__ == '__main__':
         'fair:app',
         host=SERVER_HOST,
         port=SERVER_PORT,
-        timeout_keep_alive=SERVER_TIMEOUT_KEEP_ALIVE,
-        log_level='info',
-        workers=SERVER_WORKERS
+        log_level='info'
     )
