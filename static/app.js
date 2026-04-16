@@ -1,3 +1,14 @@
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    console.log("SW registered");
+
+    // 🔴 THIS IS THE FIX
+    if (!navigator.serviceWorker.controller) {
+      window.location.reload();
+    }
+  });
+}
+
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e)=>{
@@ -7,13 +18,7 @@ window.addEventListener('beforeinstallprompt', (e)=>{
 });
 
 function installApp(){
-  if (window.OneSignal) {
-    OneSignal.push(function() {
-      OneSignal.showSlidedownPrompt();
-    });
-  } else {
-    alert("Notifications are not ready yet. Please try again.");
-  }
+  registerPush();
 }
 
 function parseTime(t){
@@ -307,8 +312,10 @@ function showStatic(name){
   scrollToContent();
 }
 
-if('serviceWorker' in navigator){
- navigator.serviceWorker.register('/static/sw.js');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(reg => console.log("SW registered:", reg.scope))
+    .catch(err => console.error("SW failed:", err));
 }
 
 function showMore(){
@@ -372,12 +379,32 @@ function isEventActive(start, end){
   return now >= startTime && now <= endTime;
 }
 
-function registerPush(){
-  if (window.OneSignal) {
-    OneSignal.push(function() {
-      OneSignal.showSlidedownPrompt();
-    });
+async function registerPush(){
+  if (!('serviceWorker' in navigator)) {
+    alert("Service workers not supported");
+    return;
   }
+
+  const reg = await navigator.serviceWorker.ready;
+
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    alert("Notifications denied");
+    return;
+  }
+
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array("BPAr2_PD2PGYvI0EsANa5gCXJ6z_hupiV6Bjdt7jxMaL_0D_QFdF-PbP3wDDNBM8PNzvbWRQegM9WH0yOyDVJ00")
+  });
+
+  await fetch('/api/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sub)
+  });
+
+  alert("Notifications enabled");
 }
 
 function urlBase64ToUint8Array(base64String) {

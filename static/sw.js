@@ -1,1 +1,0 @@
-// OneSignal manages service worker

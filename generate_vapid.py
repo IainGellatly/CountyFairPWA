@@ -1,19 +1,10 @@
-from pywebpush import webpush, WebPushException
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import serialization
+from py_vapid import Vapid
 
-private_key = ec.generate_private_key(ec.SECP256R1())
-public_key = private_key.public_key()
+v = Vapid()
+v.generate_keys()
 
-print("PRIVATE KEY:")
-print(private_key.private_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
-).decode())
+public_key = v.public_key
+private_key = v.private_key
 
-print("PUBLIC KEY:")
-print(public_key.public_bytes(
-    encoding=serialization.Encoding.X962,
-    format=serialization.PublicFormat.UncompressedPoint
-).hex())
+print("PUBLIC:\n", public_key)
+print("\nPRIVATE:\n", private_key)

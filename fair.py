@@ -8,10 +8,24 @@ import threading
 import time
 from datetime import datetime, timedelta
 import requests
+from pywebpush import webpush, WebPushException
+import json
 
 # ---------------- CONFIG ----------------
 ONESIGNAL_APP_ID = "1d4ae603-9a1f-419c-85b7-c26008c471fe"
 ONESIGNAL_API_KEY = "os_v2_app_dvfoma42d5azzbnxyjqarrdr7yialrrjkxhe325eygfqfmnmgax75unh3uyicbdlr5lpslhmpfcelj6rbqcqluhef7sjtwsndklf7ai"
+
+VAPID_PUBLIC_KEY = "BPAr2_PD2PGYvI0EsANa5gCXJ6z_hupiV6Bjdt7jxMaL_0D_QFdF-PbP3wDDNBM8PNzvbWRQegM9WH0yOyDVJ00"
+VAPID_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg6J1mHsv5+E4rogT1
+qi2JH1OhO9g8ge8kNF681hqnEBahRANCAATwK9vzw9jxmLyNBLADWuYAlyes/4bq
+YlegY3be48TGi/9A/0BXRfj2z98AwzQTPDzc721kUHoDPVh9Mjsg1SdN
+-----END PRIVATE KEY-----
+"""
+
+VAPID_CLAIMS = {
+    "sub": "mailto:iagellatly@gmail.com"
+}
 
 CLOUD_SERVICE_NAME = 'fair'
 CLOUD_LOGGING_LEVEL = logging.INFO
@@ -28,29 +42,60 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# ---------------- PUSH (ONESIGNAL) ----------------
+# ---------------- PUSH (NATIVE) ----------------
 def send_push(title, message):
-    headers = {
-        "Authorization": f"Basic {ONESIGNAL_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    conn = get_db()
+    c = conn.cursor()
 
-    payload = {
-        "app_id": ONESIGNAL_APP_ID,
-        "included_segments": ["All"],
-        "headings": {"en": title},
-        "contents": {"en": message}
-    }
+    c.execute("SELECT endpoint, p256dh, auth FROM subscriptions")
+    subs = c.fetchall()
 
-    try:
-        r = requests.post(
-            "https://onesignal.com/api/v1/notifications",
-            headers=headers,
-            json=payload
-        )
-        log.info(f"OneSignal response: {r.status_code} {r.text}")
-    except Exception as e:
-        log.error(f"Push error: {e}")
+    for s in subs:
+        subscription_info = {
+            "endpoint": s[0],
+            "keys": {
+                "p256dh": s[1],
+                "auth": s[2]
+            }
+        }
+
+        try:
+
+            from cryptography.hazmat.primitives import serialization
+
+            print("LEN:", len(VAPID_PRIVATE_KEY))
+            print("START:", VAPID_PRIVATE_KEY[:30])
+            print("END:", VAPID_PRIVATE_KEY[-30:])
+
+            # Try to parse the key explicitly
+            serialization.load_pem_private_key(
+                VAPID_PRIVATE_KEY.encode(),
+                password=None
+            )
+
+            print("PEM PARSE OK")
+
+            from py_vapid import Vapid
+
+            vapid = Vapid.from_pem(VAPID_PRIVATE_KEY.encode())
+
+            webpush(
+                subscription_info,
+                data=json.dumps({
+                    "title": title,
+                    "body": message
+                }),
+                vapid_private_key=vapid,
+                vapid_claims=VAPID_CLAIMS,
+                content_encoding="aes128gcm",
+                headers = {
+                    "TTL": "60",
+                    "Urgency": "normal"
+                }
+            )
+
+        except WebPushException as ex:
+            log.error(f"Push failed: {ex}")
 
 # ---------------- SCHEDULER ----------------
 def alert_scheduler():
@@ -186,6 +231,31 @@ async def remove_alert(event_id: int):
     conn.close()
 
     return {"status": "removed"}
+
+@app.post("/api/subscribe")
+async def subscribe(request: Request):
+    data = await request.json()
+
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+        INSERT INTO subscriptions (endpoint, p256dh, auth)
+        VALUES (?, ?, ?)
+    """, (
+        data["endpoint"],
+        data["keys"]["p256dh"],
+        data["keys"]["auth"]
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "subscribed"}
+
+@app.get("/sw.js")
+def sw():
+    return FileResponse("sw.js", media_type="application/javascript")
 
 # ---------------- TEST PUSH ----------------
 @app.get("/api/test-notify")
