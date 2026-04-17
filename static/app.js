@@ -9,6 +9,13 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+function notificationsEnabled(){
+  return (
+    localStorage.getItem('notificationsEnabled') === 'true' ||
+    Notification.permission === 'granted'
+  );
+}
+
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e)=>{
@@ -94,14 +101,19 @@ try {
   console.log("No alerts yet");
 }
 
-let h = `
-  <div class="card">
-    🔔 <b>Get Event Reminders</b><br><br>
-    Tap the button below to allow push notifications<br><br>
-    <button onclick="installApp()">🔔 Enable Notifications</button>
-  </div>
-  <h2>📅 Today's Events</h2>
-`;
+let h = '';
+
+if (!notificationsEnabled()) {
+  h += `
+    <div class="card" id="notifyCard">
+      🔔 <b>Get Event Reminders</b><br><br>
+      Tap to allow notifications 10 min before start<br><br>
+      <button onclick="installApp()">🔔 Enable Notifications</button>
+    </div>
+  `;
+}
+
+h += `<h2>📅 Today's Events</h2>`;
 
   d.forEach(e => {
         const activeClass = isEventActive(e.start_time, e.end_time) ? "active-event" : "";
@@ -288,26 +300,99 @@ async function loadExhibits(){
 }
 
 function showMap(){
-  document.getElementById('content').innerHTML = '<div id="map"></div>';
 
-  navigator.geolocation.getCurrentPosition(()=>{
-    let pin = document.createElement('div');
-    pin.className = 'pin';
-    pin.style.left = '50%';
-    pin.style.top = '50%';
-    document.getElementById('map').appendChild(pin);
-  });
+    const MAP_BOUNDS = {
+      north: 43.06114,   // top edge (lat)
+      south: 43.05628,   // bottom edge
+      west: -77.24221,   // left edge (lon)
+      east: -77.23547    // right edge
+    };
+
+    function latLonToPercent(lat, lon) {
+      const x = (lon - MAP_BOUNDS.west) / (MAP_BOUNDS.east - MAP_BOUNDS.west);
+      const y = (MAP_BOUNDS.north - lat) / (MAP_BOUNDS.north - MAP_BOUNDS.south);
+
+      return {
+        x: x * 100,
+        y: y * 100
+      };
+    }
+
+    function isInside(lat, lon) {
+      const LAT_TOL = 0.0005;  // ~55 meters
+      const LON_TOL = 0.0005;
+
+      return (
+        lat <= MAP_BOUNDS.north + LAT_TOL &&
+        lat >= MAP_BOUNDS.south - LAT_TOL &&
+        lon >= MAP_BOUNDS.west - LON_TOL &&
+        lon <= MAP_BOUNDS.east + LON_TOL
+      );
+    }
+
+    document.getElementById('content').innerHTML = `
+      <div class="card">
+        Pinch and spread to explore the fairgrounds<br>
+        Visible dot 📍 is you. Location is approximate.
+      </div>
+      <div id="map"></div>
+    `;
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+//        const lat = 43.0587;
+//        const lon = -77.2388;
+
+      if (!isInside(lat, lon)) return;
+
+      const { x, y } = latLonToPercent(lat, lon);
+
+//    console.log("lat/lon:", lat, lon);
+//    console.log("percent:", x, y);
+
+      let pin = document.createElement('div');
+      pin.className = 'pin';
+
+      pin.style.left = x + '%';
+      pin.style.top = y + '%';
+
+      document.getElementById('map').appendChild(pin);
+
+    }, (err) => {
+      console.log("Location not available", err);
+    });
 
   scrollToContent();
 }
 
-function showStatic(name){
+async function showStatic(name){
   let target = document.getElementById('moreContent') || document.getElementById('content');
 
-  target.innerHTML = `
-    <h2>${name}</h2>
-    <div class="card">Sample info for ${name}</div>
-  `;
+  try {
+    const fileMap = {
+      "Restrooms": "/static/restrooms.html",
+      "First Aid": "/static/firstaid.html",
+      "About": "/static/about.html"
+    };
+
+    const file = fileMap[name];
+
+    if (!file) {
+      target.innerHTML = `<div class="card">Content not found</div>`;
+      return;
+    }
+
+    const res = await fetch(file);
+    const html = await res.text();
+
+    target.innerHTML = `
+      <h2>${name}</h2>
+      <div class="card">${html}</div>
+    `;
+  } catch (e) {
+    target.innerHTML = `<div class="card">Error loading content</div>`;
+  }
 
   scrollToContent();
 }
@@ -398,13 +483,20 @@ async function registerPush(){
     applicationServerKey: urlBase64ToUint8Array("BPAr2_PD2PGYvI0EsANa5gCXJ6z_hupiV6Bjdt7jxMaL_0D_QFdF-PbP3wDDNBM8PNzvbWRQegM9WH0yOyDVJ00")
   });
 
-  await fetch('/api/subscribe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(sub)
-  });
+await fetch('/api/subscribe', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(sub)
+});
 
-  alert("Notifications enabled");
+// ✅ ONLY mark enabled AFTER full success
+localStorage.setItem('notificationsEnabled', 'true');
+
+// ✅ Hide banner immediately
+const card = document.getElementById('notifyCard');
+if (card) card.style.display = 'none';
+
+alert("Notifications enabled");
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -413,4 +505,5 @@ function urlBase64ToUint8Array(base64String) {
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
+
 

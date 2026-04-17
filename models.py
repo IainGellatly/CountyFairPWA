@@ -33,36 +33,37 @@ c.execute("CREATE TABLE IF NOT EXISTS alerts (id INTEGER PRIMARY KEY AUTOINCREME
 c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
 
 events=[
-("Opening Ceremony","Kickoff parade","Main Gate","10:00 AM", "11:00 AM"),
-("Kids Show","Magic and fun","Tent A","11:00 AM", "12:00 PM"),
-("Tractor Pull","Heavy equipment","Arena","1:00 PM", "3:00 PM"),
-("Petting Zoo","Family fun","Barn","3:00 PM", "4:30 PM"),
-("Live Music","Country band","Main Stage","5:00 PM", "8:00 PM"),
-("Fireworks","Night show","Fairgrounds","9:00 PM", "9:30 PM")
+("Opening Ceremony","Honor guard and announcements","Main Gate","10:00 AM", "10:30 AM"),
+("Kids Show","Magic and fun","Floral Hall","11:00 AM", "12:00 PM"),
+("Tractor Pull","Heavy equipment","Grandstand","1:00 PM", "3:00 PM"),
+("Petting Zoo","Family fun","Sensory Tent","3:00 PM", "4:30 PM"),
+("Live Music","The Haymakers Country Band","Entertainment Ally","5:00 PM", "7:00 PM"),
+("Rock Night","Classic rock","Entertainment Alley", "7:30 PM", "9:30 PM"),
+("Fireworks","Night show","Fairgrounds","10:00 PM", "10:30 PM")
 ]
 for e in events: c.execute("INSERT INTO events (title,description,location,start_time, end_time) VALUES (?,?,?,?,?)",e)
 
 food=[
 ("BBQ Shack","Pulled pork & ribs","Food Court"),
-("Ice Cream Barn","Homemade ice cream","North Lot"),
+("Ice Cream Barn","Homemade ice cream","Back of Floral Hall"),
 ("Corn Dogs","Classic fair food","Midway"),
-("Lemonade Stand","Fresh squeezed","Main Path"),
-("Pizza Wagon","Wood fired pizza","South End")
+("Lemonade Stand","Fresh squeezed","Midway"),
+("Pizza Wagon","Wood fired pizza","Food Court")
 ]
 for f in food: c.execute("INSERT INTO food VALUES (?,?,?)",f)
 
 music=[
-("The Haymakers","Country band","Main Stage","6:00 PM"),
-("Bluegrass Boys","Live bluegrass","Barn Stage","2:00 PM"),
-("Rock Night","Classic rock","Main Stage","8:00 PM")
+("Bluegrass Boys","Live bluegrass","Floral Hall Back Porch","2:00-3:30 PM"),
+("The Haymakers","Country band","Entertainment Alley","5:00-7:00 PM"),
+("Rock Night","Classic rock","Entertainment Alley","7:30-9:30 PM")
 ]
 for m in music: c.execute("INSERT INTO music VALUES (?,?,?,?)",m)
 
 ex=[
-("Dairy Cows","Prize cattle","Barn A","Animals"),
-("4H Club","Youth exhibits","Hall B","Organization"),
-("Quilting","Handmade quilts","Hall C","Home Arts"),
-("Photography","Local artists","Hall D","Arts")
+("Dairy Cows","Prize cattle","Cattle Building","Animals"),
+("4H Club","Youth exhibits","4-H Building","Organization"),
+("Quilting","Handmade quilts","Floral Hall","Home Arts"),
+("Photography","Local artists","Floral Hall","Arts")
 ]
 for x in ex: c.execute("INSERT INTO exhibits VALUES (?,?,?,?)",x)
 

@@ -36,13 +36,14 @@ button:active {
  box-shadow:0 2px 6px rgba(0,0,0,0.2);
 }
 
-#map{
- position:relative;height:300px;
- background:url('/static/sample_map.jpg') center/cover;
-}
-
 .pin{
- position:absolute;width:18px;height:18px;background:red;border-radius:50%;
+  position:absolute;
+  width:14px;
+  height:14px;
+  background:red;
+  border-radius:50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 6px rgba(255,0,0,0.8);
 }
 
 .zone{
@@ -79,9 +80,19 @@ button:active {
   width: 80%;
   margin: 0 auto;
   height: 300px;
-  background: url('/static/map.jpg') center/cover;
+
+  background-image: url('/static/map.jpg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+
+  background-color: #ddd;   /* fallback so you can see container */
+
   border-radius: 12px;
   overflow: hidden;
+
+  border: 3px solid #8b5a2b;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 .sponsor {
