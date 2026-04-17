@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import requests
 from pywebpush import webpush, WebPushException
 import json
+import pytz
 
 # ---------------- CONFIG ----------------
 ONESIGNAL_APP_ID = "1d4ae603-9a1f-419c-85b7-c26008c471fe"
@@ -41,6 +42,38 @@ logging.basicConfig(
     level=CLOUD_LOGGING_LEVEL,
     datefmt='%Y-%m-%d %H:%M:%S'
 )
+
+def send_push_to_one(sub, message):
+    endpoint, p256dh, auth = sub
+
+    subscription_info = {
+        "endpoint": endpoint,
+        "keys": {
+            "p256dh": p256dh,
+            "auth": auth
+        }
+    }
+
+    parsed = urlparse(endpoint)
+    aud = f"{parsed.scheme}://{parsed.netloc}"
+
+    vapid = Vapid.from_pem(VAPID_PRIVATE_KEY.encode())
+
+    webpush(
+        subscription_info,
+        data=json.dumps({
+            "title": "Upcoming Event",
+            "body": message
+        }),
+        vapid_private_key=vapid,
+        vapid_claims={
+            "sub": "mailto:iagellatly@gmail.com",
+            "aud": aud
+        },
+        content_encoding="aes128gcm",
+        headers={"TTL": "60", "Urgency": "normal"}
+    )
+
 
 # ---------------- PUSH (NATIVE) ----------------
 from urllib.parse import urlparse
@@ -105,38 +138,80 @@ def send_push(title, message):
 
 # ---------------- SCHEDULER ----------------
 def alert_scheduler():
+    import pytz
+    from datetime import datetime
+    from urllib.parse import urlparse
+
+    tz = pytz.timezone("America/New_York")
+
     while True:
         try:
             conn = get_db()
             c = conn.cursor()
 
-            now = datetime.now()
-
+            # ✅ Get ONLY unsent alerts with endpoint
             c.execute("""
-                SELECT e.id, e.title, e.start_time
+                SELECT e.id, e.title, e.start_time, a.endpoint, a.id
                 FROM events e
                 JOIN alerts a ON e.id = a.event_id
+                WHERE a.sent = 0
             """)
-
             rows = c.fetchall()
 
             for r in rows:
-                event_id, title, start_time = r
+                event_id, title, start_time, endpoint, alert_id = r
 
+                # ✅ Current time (correct timezone)
+                now = datetime.now(tz)
+
+                # ✅ Parse event time (string → datetime)
                 event_time = datetime.strptime(start_time, "%I:%M %p")
+
+                # ✅ Apply today's date
                 event_time = event_time.replace(
                     year=now.year,
                     month=now.month,
                     day=now.day
                 )
 
+                # ✅ Apply timezone
+                event_time = tz.localize(event_time)
+
+                # ✅ Calculate minutes difference
                 diff = (event_time - now).total_seconds() / 60
 
-                if 9 <= diff <= 10:
-                    send_push(
-                        "Upcoming Event",
-                        f"{title} starts in 10 minutes"
-                    )
+                log.info(f"NOW: {now} | EVENT: {event_time} | DIFF: {diff}")
+
+                # ✅ Trigger window (wider to avoid misses)
+                if 8 <= diff <= 12:
+
+                    # 🔴 Get ONLY this user's subscription
+                    c.execute("""
+                        SELECT endpoint, p256dh, auth
+                        FROM subscriptions
+                        WHERE endpoint = ?
+                    """, (endpoint,))
+
+                    sub = c.fetchone()
+
+                    if sub:
+                        try:
+                            # 🔴 Send ONLY to this user
+                            send_push_to_one(
+                                sub,
+                                f"{title} starts in 10 minutes"
+                            )
+
+                            # ✅ Mark as sent (prevents repeats)
+                            c.execute("""
+                                UPDATE alerts SET sent = 1 WHERE id = ?
+                            """, (alert_id,))
+                            conn.commit()
+
+                            log.info(f"Alert sent for event {event_id} to {endpoint}")
+
+                        except Exception as e:
+                            log.error(f"Send error: {e}")
 
             conn.close()
 
@@ -216,10 +291,24 @@ def get_alerts():
 
 @app.post("/api/alerts/add/{event_id}")
 async def add_alert(event_id: int, request: Request):
+    data = await request.json()
+    endpoint = data.get("endpoint")
+
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("INSERT INTO alerts (event_id) VALUES (?)", (event_id,))
+    c.execute("""
+        SELECT 1 FROM alerts
+        WHERE endpoint = ? AND event_id = ?
+    """, (endpoint, event_id))
+
+    exists = c.fetchone()
+
+    if not exists:
+        c.execute("""
+            INSERT INTO alerts (endpoint, event_id, sent)
+            VALUES (?, ?, 0)
+        """, (endpoint, event_id))
 
     conn.commit()
     conn.close()
@@ -227,11 +316,18 @@ async def add_alert(event_id: int, request: Request):
     return {"status": "added"}
 
 @app.post("/api/alerts/remove/{event_id}")
-async def remove_alert(event_id: int):
+async def remove_alert(event_id: int, request: Request):
+    data = await request.json()
+    endpoint = data.get("endpoint")
+
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("DELETE FROM alerts WHERE event_id = ?", (event_id,))
+    # ✅ Remove ONLY this user's alert for this event
+    c.execute("""
+        DELETE FROM alerts
+        WHERE event_id = ? AND endpoint = ?
+    """, (event_id, endpoint))
 
     conn.commit()
     conn.close()
