@@ -43,7 +43,6 @@ button:active {
   background:red;
   border-radius:50%;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 6px rgba(255,0,0,0.8);
 }
 
 .zone{
@@ -127,4 +126,9 @@ button:active {
 .card.active-event {
   border: 2px solid #2e7d32;
   background: #f1f8f4;
+}
+
+.alert-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

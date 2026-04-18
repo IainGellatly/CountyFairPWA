@@ -33,13 +33,13 @@ c.execute("CREATE TABLE IF NOT EXISTS alerts (id INTEGER PRIMARY KEY AUTOINCREME
 c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
 
 events=[
-("Opening Ceremony","Honor guard and announcements","Main Gate","10:00 AM", "10:30 AM"),
-("Kids Show","Magic and fun","Floral Hall","11:00 AM", "12:00 PM"),
-("Tractor Pull","Heavy equipment","Grandstand","1:00 PM", "3:00 PM"),
-("Petting Zoo","Family fun","Sensory Tent","3:00 PM", "4:30 PM"),
-("Live Music","The Haymakers Country Band","Entertainment Ally","5:00 PM", "7:00 PM"),
-("Rock Night","Classic rock","Entertainment Alley", "7:30 PM", "9:30 PM"),
-("Fireworks","Night show","Fairgrounds","10:00 PM", "10:30 PM")
+("Opening Ceremony","Honor guard and announcements","Main Gate","10:00", "10:30"),
+("Kids Show","Magic and fun","Floral Hall","11:00", "12:00"),
+("Tractor Pull","Heavy equipment","Grandstand","13:00", "15:00"),
+("Petting Zoo","Family fun","Sensory Tent","15:00", "16:30"),
+("Live Music","The Haymakers Country Band","Entertainment Ally","17:00", "19:00"),
+("Rock Night","Classic rock","Entertainment Alley", "19:30", "21:30"),
+("Fireworks","Night show","Fairgrounds","22:00", "22:30")
 ]
 for e in events: c.execute("INSERT INTO events (title,description,location,start_time, end_time) VALUES (?,?,?,?,?)",e)
 

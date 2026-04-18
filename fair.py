@@ -33,6 +33,19 @@ CLOUD_LOGGING_LEVEL = logging.INFO
 CLOUD_LOG_FILE_NAME = 'fair.log'
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8000
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {"()": "uvicorn.logging.DefaultFormatter", "fmt": "%(message)s", "use_colors": False},
+    },
+    "handlers": {
+        "file": {"class": "logging.FileHandler", "filename": "uvicorn.log", "formatter": "default"},
+    },
+    "loggers": {
+        "uvicorn": {"handlers": ["file"], "level": "INFO"},
+    },
+}
 
 # ---------------- LOGGING ----------------
 log = logging.getLogger(CLOUD_SERVICE_NAME)
@@ -164,23 +177,21 @@ def alert_scheduler():
                 # ✅ Current time (correct timezone)
                 now = datetime.now(tz)
 
-                # ✅ Parse event time (string → datetime)
-                event_time = datetime.strptime(start_time, "%I:%M %p")
-
-                # ✅ Apply today's date
-                event_time = event_time.replace(
-                    year=now.year,
-                    month=now.month,
-                    day=now.day
+                # ✅ Create naive datetime
+                event_time = datetime.combine(
+                    now.date(),
+                    datetime.strptime(start_time, "%H:%M").time()
                 )
 
-                # ✅ Apply timezone
+                # ✅ Properly localize ONCE
                 event_time = tz.localize(event_time)
 
                 # ✅ Calculate minutes difference
-                diff = (event_time - now).total_seconds() / 60
+                print_now = now.strftime("%Y-%m-%d %H:%M:%S")
+                print_event_time = event_time.strftime("%Y-%m-%d %H:%M:%S")
+                diff = int((event_time - now).total_seconds() / 60)
 
-                log.info(f"NOW: {now} | EVENT: {event_time} | DIFF: {diff}")
+                log.info(f"event_id: {event_id}, event_time: {print_event_time}, min_countdown: {diff}")
 
                 # ✅ Trigger window (wider to avoid misses)
                 if 8 <= diff <= 12:
@@ -293,6 +304,9 @@ def get_alerts():
 async def add_alert(event_id: int, request: Request):
     data = await request.json()
     endpoint = data.get("endpoint")
+    if endpoint:
+        endpoint = endpoint.strip()
+    log.info(f"ADD endpoint: {endpoint}")
 
     conn = get_db()
     c = conn.cursor()
@@ -319,9 +333,16 @@ async def add_alert(event_id: int, request: Request):
 async def remove_alert(event_id: int, request: Request):
     data = await request.json()
     endpoint = data.get("endpoint")
+    if endpoint:
+        endpoint = endpoint.strip()
+    log.info(f"REMOVE endpoint: {endpoint}")
 
     conn = get_db()
     c = conn.cursor()
+
+    c.execute("SELECT endpoint FROM alerts WHERE event_id = ?", (event_id,))
+    rows = c.fetchall()
+    log.info(f"DB endpoints for event {event_id}: {rows}")
 
     # ✅ Remove ONLY this user's alert for this event
     c.execute("""
@@ -375,5 +396,5 @@ if __name__ == '__main__':
         'fair:app',
         host=SERVER_HOST,
         port=SERVER_PORT,
-        log_level='info'
+        log_config=LOGGING_CONFIG
     )
