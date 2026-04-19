@@ -7,26 +7,40 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('push', function(event) {
+  console.log("SW VERSION TEST 2");
   console.log("PUSH RECEIVED", event);
 
-  let title = "Fair Reminder";
-  let body = "Event starting soon";
+  event.waitUntil((async () => {
 
-  if (event.data) {
+    let title = "Fair Reminder";
+    let body = "Event starting soon";
+
     try {
-      const data = event.data.json();
-      title = data.title || title;
-      body = data.body || body;
-    } catch (e) {
-      // ✅ Handle plain text payload (your current case)
-      body = event.data.text();
-    }
-  }
+      if (event.data) {
+        try {
+          const data = event.data.json();
+          title = data.title || title;
+          body = data.body || body;
+        } catch (e) {
+          body = event.data.text();
+        }
+      }
 
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body: body,
-      icon: '/static/logo.png'
-    })
-  );
+      console.log("SHOWING NOTIFICATION:", title, body);
+
+      await self.registration.showNotification(title, {
+        body: body,
+        icon: '/static/logo.png',
+        vibrate: [200, 100, 200, 100, 200],
+        tag: "fair-alert",
+        renotify: true
+      });
+
+      console.log("NOTIFICATION SHOWN");
+
+    } catch (err) {
+      console.error("SW ERROR:", err);
+    }
+
+  })());
 });

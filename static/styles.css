@@ -46,7 +46,8 @@ button:active {
 }
 
 .zone{
- position:absolute;border:2px solid rgba(255,255,255,0.6);
+  position: absolute;
+  background: rgba(0,0,0,0); /* invisible */
 }
 
 /* horizontal button groups */
@@ -132,3 +133,41 @@ button:active {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.poi-popup{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.2);
+
+  z-index: 999;
+}
+
+.poi-content{
+  position: absolute;   /* ✅ REQUIRED for tap positioning */
+
+  background: white;
+  padding: 4px;
+  border-radius: 4px;
+
+  max-width: 90px;      /* ✅ better for small popups */
+  width: auto;          /* ✅ prevents stretching across screen */
+
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+@keyframes popIn{
+  from { transform: translate(-50%, -100%) scale(0.9); opacity: 0; }
+  to   { transform: translate(-50%, -110%) scale(1); opacity: 1; }
+}
+
+.poi-content h3{
+  font-size: 0.4em;
+}
+
+.poi-content p{
+  font-size: 0.4em;
+}
+

@@ -2,9 +2,9 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').then(reg => {
     console.log("SW registered");
 
-    if (!navigator.serviceWorker.controller) {
-      window.location.reload();
-    }
+//    if (!navigator.serviceWorker.controller) {
+//      window.location.reload();
+//    }
   });
 }
 
@@ -377,6 +377,80 @@ function showMap(){
   }
 
   const mapEl = document.getElementById('map');
+
+// ---------------- POI ZONES ----------------
+const POIS = [
+  { id: "entertainment", left: 32.39, top: 17.61, width: 11.42, height: 9.35, text: "Beer tent, main stage and seating area" },
+  { id: "grandstand", left: 38.58, top: 47.00, width: 12.24, height: 17.46, text: "Bleacher seating for demolition derby and track events" },
+  { id: "midway", left: 33.06, top: 28.87, width: 12.24, height: 16.06, text: "Rides, games and more food" },
+  { id: "food", left: 48.92, top: 23.19, width: 16.74, height: 5.17, text: "Snack, drinks and meals with bench seating" },
+  { id: "entrance", left: 54.60, top: 6.61, width: 11.21, height: 14.77, text: "Flag pole seating area, Floral Hall and 4-H Building" },
+  { id: "commercial", left: 44.89, top: 14.67, width: 8.73, height: 8.11, text: "Two buildings of commercial and organization information" },
+  { id: "agriculture", left: 66.58, top: 16.22, width: 13.07, height: 13.38, text: "Livestock displays, judging and events" },
+  { id: "stable", left: 73.14, top: 32.75, width: 9.81, height: 23.50, text: "Horse stables and track event preparation area" }
+];
+
+// Create invisible clickable zones
+POIS.forEach(poi => {
+  const z = document.createElement('div');
+  z.className = 'zone';
+
+  z.style.left = poi.left + '%';
+  z.style.top = poi.top + '%';
+  z.style.width = poi.width + '%';
+  z.style.height = poi.height + '%';
+
+  z.addEventListener('click', (e) => showPOIPopup(poi, e));
+
+  mapEl.appendChild(z);
+});
+
+// Popup function
+function showPOIPopup(poi, event){
+
+  // Remove any existing popup first
+  const existing = document.querySelector('.poi-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.className = 'poi-popup';
+
+  const content = document.createElement('div');
+  content.className = 'poi-content';
+
+  content.innerHTML = `
+    <h3>${poi.id.toUpperCase()}</h3>
+    <p>${poi.text}</p>
+  `;
+
+  popup.appendChild(content);
+  document.body.appendChild(popup);
+
+  // 👉 Position near tap
+  const x = event.clientX;
+  const y = event.clientY;
+
+  content.style.position = 'absolute';
+  content.style.left = x + 'px';
+  content.style.top = y + 'px';
+  content.style.transform = 'translate(-50%, -110%)'; // above finger
+
+  // 👉 Keep inside screen bounds
+  const rect = content.getBoundingClientRect();
+
+  if (rect.left < 10) content.style.left = '10px';
+  if (rect.right > window.innerWidth - 10)
+    content.style.left = (window.innerWidth - rect.width - 10) + 'px';
+
+  if (rect.top < 10)
+    content.style.top = (y + 20) + 'px'; // flip below if too high
+
+  // 👉 Tap anywhere closes
+  popup.addEventListener('click', () => popup.remove());
+
+  // 👉 Prevent immediate close when tapping content
+  content.addEventListener('click', (e) => e.stopPropagation());
+}
 
   let pin = document.createElement('div');
   pin.className = 'pin';

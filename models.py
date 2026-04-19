@@ -2,6 +2,53 @@
 from database import get_db
 conn=get_db();c=conn.cursor()
 
+c.execute(
+    "CREATE TABLE IF NOT EXISTS commercial (name TEXT,description TEXT,location TEXT)")
+comm=[
+    ("Gutter Guardian","Home improvement experts","Commercial Building 1"),
+    ("Mobile Mart","Cell phones and accessories","Commercial Building 2"),
+    ("Wayne Landscaping Inc.","Landscaping and expert care","Commercial Building 2")
+]
+for x in comm: c.execute(
+    "INSERT INTO commercial VALUES (?,?,?)",x)
+
+c.execute(
+    "CREATE TABLE IF NOT EXISTS organization (name TEXT,description TEXT,location TEXT)")
+org=[
+    ("Historic Palmyra","Local history exhibits","Floral Hall"),
+    ("Wayne County Sheriff","Home safety information","Floral Hall"),
+    ("American Legion Post 120","Veteran services organization","Floral Hall")
+]
+for x in org: c.execute(
+    "INSERT INTO organization VALUES (?,?,?)",x)
+
+c.execute("""
+    CREATE TABLE IF NOT EXISTS calendar (
+        id INTEGER PRIMARY KEY,
+        category TEXT,
+        title TEXT,
+        description TEXT,
+        location TEXT,
+        price TEXT,
+        start_time TEXT, 
+        end_time TEXT)
+""")
+cal = [
+    ("general","Opening Ceremony","Honor guard and announcements","Main Gate","Free","2026-08-10 10:00", "2026-08-10 10:30"),
+    ("general","Kids Show","Magic and fun","Floral Hall","Free","2026-08-10 11:00", "2026-08-10 12:00"),
+    ("contest","Tractor Pull","Heavy equipment","Grandstand","$5.00","2026-08-10 13:00", "2026-08-10 15:00"),
+    ("general","Petting Zoo","Family fun","Sensory Tent","Free","2026-08-10 15:00", "2026-08-10 16:30"),
+    ("music","Live Music","The Haymakers Country Band","Entertainment Ally","Free","2026-08-10 17:00", "2026-08-10 19:00"),
+    ("music","Rock Night","Classic rock","Entertainment Alley", "Free","2026-08-10 19:30", "2026-08-10 21:30"),
+    ("general","Fireworks","Night show","Fairgrounds","Free","2026-08-11 22:00", "2026-08-11 22:30")
+]
+for e in cal: c.execute(
+    "INSERT INTO calendar (category,title,description,location,price,start_time,end_time) VALUES (?,?,?,?,?,?,?)",e)
+
+
+
+
+
 c.execute("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,title TEXT,description TEXT,location TEXT,start_time TEXT, end_time text)")
 c.execute("CREATE TABLE IF NOT EXISTS food (name TEXT,description TEXT,location TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS music (name TEXT,description TEXT,location TEXT,datetime TEXT)")
