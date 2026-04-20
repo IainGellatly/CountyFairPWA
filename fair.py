@@ -251,15 +251,45 @@ def fetch(q):
 # ---------------- API ROUTES ----------------
 @app.get("/api/events")
 def events():
-    rows = fetch("SELECT id,title,description,location,start_time,end_time FROM events ORDER BY start_time")
+    rows = fetch("""
+        SELECT id, category, title, description, location, price, start_time, end_time
+        FROM events
+        ORDER BY start_time
+    """)
+
     return [
         {
             "id": r[0],
-            "title": r[1],
-            "description": r[2],
-            "location": r[3],
-            "start_time": r[4],
-            "end_time": r[5]
+            "category": r[1],
+            "title": r[2],
+            "description": r[3],
+            "location": r[4],
+            "price": r[5],
+            "start_time": r[6],
+            "end_time": r[7]
+        }
+        for r in rows
+    ]
+
+@app.get("/api/events/music")
+def events_music():
+    rows = fetch("""
+        SELECT id, category, title, description, location, price, start_time, end_time
+        FROM events
+        WHERE category = 'music'
+        ORDER BY start_time
+    """)
+
+    return [
+        {
+            "id": r[0],
+            "category": r[1],
+            "title": r[2],
+            "description": r[3],
+            "location": r[4],
+            "price": r[5],
+            "start_time": r[6],
+            "end_time": r[7]
         }
         for r in rows
     ]

@@ -633,6 +633,16 @@ async function loadPage(page){
 
   const content = document.getElementById("content");
 
+    if (page === "calendar"){
+      loadEventsCalendar();
+      return;
+    }
+
+    if (page === "fun"){
+      loadMusicEvents();
+      return;
+    }
+
     if (page === "explore"){
       showExploreMap();
       return;
@@ -727,6 +737,98 @@ function showExploreMap(){
   showMap();   // reuse EXACT existing logic
 }
 
+function formatTime12(dt){
+  const d = new Date(dt);
+  let h = d.getHours();
+  const m = d.getMinutes().toString().padStart(2,'0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+
+  h = h % 12;
+  if (h === 0) h = 12;
+
+  return `${h}:${m} ${ampm}`;
+}
+
+function formatDayHeader(dt){
+  const d = new Date(dt);
+
+  return d.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+async function loadEventsCalendar(){
+
+  const content = document.getElementById("content");
+
+  let r = await fetch('/api/events');
+  let data = await r.json();
+
+  let h = '';
+
+  let currentDay = '';
+
+  data.forEach(e => {
+
+    const day = e.start_time.split(' ')[0]; // YYYY-MM-DD
+
+    if (day !== currentDay){
+      currentDay = day;
+
+      h += `<h2>${formatDayHeader(e.start_time)}</h2>`;
+    }
+
+    h += `
+      <div class="card">
+        <b>${e.title}</b><br>
+        ${e.description}<br>
+        ${e.location}<br>
+        ${e.price ? e.price + '<br>' : ''}
+        ${formatTime12(e.start_time)} - ${formatTime12(e.end_time)}
+      </div>
+    `;
+  });
+
+  content.innerHTML = h;
+  content.scrollIntoView({ behavior: "smooth" });
+}
+
+async function loadMusicEvents(){
+
+  const content = document.getElementById("content");
+
+  let r = await fetch('/api/events/music');
+  let data = await r.json();
+
+  let h = '';
+
+  let currentDay = '';
+
+  data.forEach(e => {
+
+    const day = e.start_time.split(' ')[0];
+
+    if (day !== currentDay){
+      currentDay = day;
+
+      h += `<h2>${formatDayHeader(e.start_time)}</h2>`;
+    }
+
+    h += `
+      <div class="card">
+        <b>${e.title}</b><br>
+        ${e.description}<br>
+        ${e.location}<br>
+        ${formatTime12(e.start_time)} - ${formatTime12(e.end_time)}
+      </div>
+    `;
+  });
+
+  content.innerHTML = h;
+  content.scrollIntoView({ behavior: "smooth" });
+}
 
 // Disable long-press context menu globally
 document.addEventListener("contextmenu", e => e.preventDefault());
