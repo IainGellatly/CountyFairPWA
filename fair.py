@@ -274,10 +274,20 @@ def music():
     rows = fetch("SELECT name,description,location,datetime FROM music")
     return [{"name": r[0], "description": r[1], "location": r[2], "datetime": r[3]} for r in rows]
 
-@app.get("/api/exhibits")
-def exhibits():
-    rows = fetch("SELECT name,description,location,category FROM exhibits")
+@app.get("/api/animals")
+def animals():
+    rows = fetch("SELECT name,description,location,category FROM animals")
     return [{"name": r[0], "description": r[1], "location": r[2], "category": r[3]} for r in rows]
+
+@app.get("/api/organizations")
+def organizations():
+    rows = fetch("SELECT name,description,location FROM organizations")
+    return [{"name": r[0], "description": r[1], "location": r[2]} for r in rows]
+
+@app.get("/api/commercial")
+def commercial():
+    rows = fetch("SELECT name,description,location FROM commercial")
+    return [{"name": r[0], "description": r[1], "location": r[2]} for r in rows]
 
 @app.get("/api/sponsors")
 def sponsors():

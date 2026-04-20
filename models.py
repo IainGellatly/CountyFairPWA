@@ -45,14 +45,10 @@ cal = [
 for e in cal: c.execute(
     "INSERT INTO calendar (category,title,description,location,price,start_time,end_time) VALUES (?,?,?,?,?,?,?)",e)
 
-
-
-
-
 c.execute("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,title TEXT,description TEXT,location TEXT,start_time TEXT, end_time text)")
 c.execute("CREATE TABLE IF NOT EXISTS food (name TEXT,description TEXT,location TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS music (name TEXT,description TEXT,location TEXT,datetime TEXT)")
-c.execute("CREATE TABLE IF NOT EXISTS exhibits (name TEXT,description TEXT,location TEXT,category TEXT)")
+c.execute("CREATE TABLE IF NOT EXISTS animals (name TEXT,description TEXT,location TEXT)")
 # Sponsors table
 c.execute("""
 CREATE TABLE IF NOT EXISTS sponsors (
@@ -106,13 +102,13 @@ music=[
 ]
 for m in music: c.execute("INSERT INTO music VALUES (?,?,?,?)",m)
 
-ex=[
-("Dairy Cows","Prize cattle","Cattle Building","Animals"),
-("4H Club","Youth exhibits","4-H Building","Organization"),
-("Quilting","Handmade quilts","Floral Hall","Home Arts"),
-("Photography","Local artists","Floral Hall","Arts")
+anim=[
+("Smith Dairy", "Dairy cows","Cattle Building"),
+("Jones Acres", "Dairy cows", "Cattle Building"),
+("Hoover Farms", "Pigs and goats", "Farm Tent"),
+("Cluck Farms", "Prize chickens", "Farm Tent")
 ]
-for x in ex: c.execute("INSERT INTO exhibits VALUES (?,?,?,?)",x)
+for a in anim: c.execute("INSERT INTO animals VALUES (?,?,?)",a)
 
 c.execute("DELETE FROM sponsors")
 

@@ -261,7 +261,12 @@ function showExplore(){
     <div class="row">
       <button onclick="loadFood()">🍔 Food</button>
       <button onclick="loadMusic()">🎵 Music</button>
-      <button onclick="loadExhibits()">🐄 Exhibits</button>
+      <button onclick="loadAnimals()">🐄 Animals</button>
+    </div>
+    <div class="row">
+      <button onclick="loadOrganizations()">🏛️ Organizations</button>
+      <button onclick="loadCommercial()">🛍️ Commercial</button>
+      <button onclick="loadDerby()">🚗 Demolition Derby</button>
     </div>
     <div id="exploreContent"></div>
   `;
@@ -294,16 +299,54 @@ async function loadMusic(){
   scrollToContent();
 }
 
-async function loadExhibits(){
-  let r = await fetch('/api/exhibits');
+async function loadAnimals(){
+  let r = await fetch('/api/animals');
   let d = await r.json();
 
-  let h = '<h2>Exhibits</h2>';
+  let h = '<h2>Animals</h2>';
   d.forEach(i => {
     h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.category}</div>`;
   });
 
   document.getElementById('exploreContent').innerHTML = h;
+  scrollToContent();
+}
+
+async function loadOrganizations(){
+  let r = await fetch('/api/organizations');
+  let d = await r.json();
+
+  let h = '<h2>Organizations</h2>';
+  d.forEach(i => {
+    h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}</div>`;
+  });
+
+  document.getElementById('exploreContent').innerHTML = h;
+  scrollToContent();
+}
+
+async function loadCommercial(){
+  let r = await fetch('/api/commercial');
+  let d = await r.json();
+
+  let h = '<h2>Commercial Vendors</h2>';
+  d.forEach(i => {
+    h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}</div>`;
+  });
+
+  document.getElementById('exploreContent').innerHTML = h;
+  scrollToContent();
+}
+
+async function loadDerby(){
+  const res = await fetch('/static/derby.html');
+  const html = await res.text();
+
+  document.getElementById('exploreContent').innerHTML = `
+    <h2>Demolition Derby</h2>
+    <div class="card">${html}</div>
+  `;
+
   scrollToContent();
 }
 
