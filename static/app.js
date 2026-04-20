@@ -355,8 +355,7 @@ function showMap(){
 
   document.getElementById('content').innerHTML = `
     <div class="card">
-      Pinch and spread to explore the Fair.<br>
-      Red dot 📍 is your current location.
+      Pinch and spread to explore. Red dot is your location. Tap yellow ? for info.
     </div>
     <div id="map"></div>
   `;
@@ -634,6 +633,11 @@ async function loadPage(page){
 
   const content = document.getElementById("content");
 
+    if (page === "explore"){
+      showExploreMap();
+      return;
+    }
+
   // 🔴 DYNAMIC DATA PAGES
   if (["food","exhibits","business","animals","sponsors"].includes(page)){
 
@@ -718,6 +722,11 @@ async function loadDynamic(type){
   content.innerHTML = h;
   content.scrollIntoView({ behavior: "smooth" });
 }
+
+function showExploreMap(){
+  showMap();   // reuse EXACT existing logic
+}
+
 
 // Disable long-press context menu globally
 document.addEventListener("contextmenu", e => e.preventDefault());

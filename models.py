@@ -95,13 +95,9 @@ for s in spon:
         VALUES (?, ?, ?, ?, ?, ?)
     """, s)
 
-conn.commit();conn.close()
-print("DB ready")
-
-sys.exit()
-
+c.execute("drop table if exists events;")
 c.execute("""
-    CREATE TABLE IF NOT EXISTS calendar (
+    CREATE TABLE events (
         id INTEGER PRIMARY KEY,
         category TEXT,
         title TEXT,
@@ -109,45 +105,22 @@ c.execute("""
         location TEXT,
         price TEXT,
         start_time TEXT, 
-        end_time TEXT)
+        end_time TEXT);
 """)
-cal = [
+ev = [
     ("general","Opening Ceremony","Honor guard and announcements","Main Gate","Free","2026-08-10 10:00", "2026-08-10 10:30"),
     ("general","Kids Show","Magic and fun","Floral Hall","Free","2026-08-10 11:00", "2026-08-10 12:00"),
     ("contest","Tractor Pull","Heavy equipment","Grandstand","$5.00","2026-08-10 13:00", "2026-08-10 15:00"),
     ("general","Petting Zoo","Family fun","Sensory Tent","Free","2026-08-10 15:00", "2026-08-10 16:30"),
     ("music","Live Music","The Haymakers Country Band","Entertainment Ally","Free","2026-08-10 17:00", "2026-08-10 19:00"),
     ("music","Rock Night","Classic rock","Entertainment Alley", "Free","2026-08-10 19:30", "2026-08-10 21:30"),
+    ("music", "Bluegrass Boys","Live bluegrass","Floral Hall Back Porch", "Free", "2026-08-10 14:00", "2026-08-10 15:30"),
+    ("music", "The Haymakers","Country band","Entertainment Alley","Free", "2026-08-11 17:00", "2026-08-11 19:00"),
     ("general","Fireworks","Night show","Fairgrounds","Free","2026-08-11 22:00", "2026-08-11 22:30")
 ]
-for e in cal: c.execute(
-    "INSERT INTO calendar (category,title,description,location,price,start_time,end_time) VALUES (?,?,?,?,?,?,?)",e)
+for e in ev:
+    c.execute(
+    "INSERT INTO events (category,title,description,location,price,start_time,end_time) VALUES (?,?,?,?,?,?,?)",e)
 
-c.execute("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,title TEXT,description TEXT,location TEXT,start_time TEXT, end_time text)")
-
-c.execute("CREATE TABLE IF NOT EXISTS music (name TEXT,description TEXT,location TEXT,datetime TEXT)")
-
-
-c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
-
-events=[
-("Opening Ceremony","Honor guard and announcements","Main Gate","10:00", "10:30"),
-("Kids Show","Magic and fun","Floral Hall","11:00", "12:00"),
-("Tractor Pull","Heavy equipment","Grandstand","13:00", "15:00"),
-("Petting Zoo","Family fun","Sensory Tent","15:00", "16:30"),
-("Live Music","The Haymakers Country Band","Entertainment Ally","17:00", "19:00"),
-("Rock Night","Classic rock","Entertainment Alley", "19:30", "21:30"),
-("Fireworks","Night show","Fairgrounds","22:00", "22:30")
-]
-for e in events: c.execute("INSERT INTO events (title,description,location,start_time, end_time) VALUES (?,?,?,?,?)",e)
-
-
-
-music=[
-("Bluegrass Boys","Live bluegrass","Floral Hall Back Porch","2:00-3:30 PM"),
-("The Haymakers","Country band","Entertainment Alley","5:00-7:00 PM"),
-("Rock Night","Classic rock","Entertainment Alley","7:30-9:30 PM")
-]
-for m in music: c.execute("INSERT INTO music VALUES (?,?,?,?)",m)
-
-
+conn.commit();conn.close()
+print("DB ready")
