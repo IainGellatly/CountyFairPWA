@@ -276,8 +276,8 @@ def music():
 
 @app.get("/api/animals")
 def animals():
-    rows = fetch("SELECT name,description,location,category FROM animals")
-    return [{"name": r[0], "description": r[1], "location": r[2], "category": r[3]} for r in rows]
+    rows = fetch("SELECT name,description,location FROM animals")
+    return [{"name": r[0], "description": r[1], "location": r[2]} for r in rows]
 
 @app.get("/api/organizations")
 def organizations():
@@ -287,6 +287,17 @@ def organizations():
 @app.get("/api/commercial")
 def commercial():
     rows = fetch("SELECT name,description,location FROM commercial")
+    return [{"name": r[0], "description": r[1], "location": r[2]} for r in rows]
+
+@app.get("/api/exhibits")
+def exhibits():
+    rows = fetch("SELECT name,description,location FROM exhibits")
+    return [{"name": r[0], "description": r[1], "location": r[2]} for r in rows]
+
+
+@app.get("/api/business")
+def business():
+    rows = fetch("SELECT name,description,location FROM business")
     return [{"name": r[0], "description": r[1], "location": r[2]} for r in rows]
 
 @app.get("/api/sponsors")

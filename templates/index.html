@@ -2,12 +2,9 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="manifest" href="/static/manifest.json">
 <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-
-<br>
 
 <img src="/static/logo.png" class="logo"/>
 
@@ -17,22 +14,93 @@
   Monday Aug 10th - Sunday Aug 16th, 2026
 </div>
 
+<!-- GRID -->
+<div class="icon-grid">
+
+  <!-- ROW 1 -->
+  <div class="icon-card" data-page="today">
+    <img src="/static/icons/today.png">
+    <div>Today</div>
+  </div>
+
+  <div class="icon-card" data-page="explore">
+    <img src="/static/icons/explore.png">
+    <div>Explore</div>
+  </div>
+
+  <div class="icon-card" data-page="calendar">
+    <img src="/static/icons/calendar.png">
+    <div>Calendar</div>
+  </div>
+
+  <!-- ROW 2 -->
+  <div class="icon-card" data-page="food">
+    <img src="/static/icons/food.png">
+    <div>Food</div>
+  </div>
+
+  <div class="icon-card" data-page="fun">
+    <img src="/static/icons/fun.png">
+    <div>Fun</div>
+  </div>
+
+  <div class="icon-card" data-page="derby">
+    <img src="/static/icons/derby.png">
+    <div>Derby</div>
+  </div>
+
+  <!-- ROW 3 -->
+  <div class="icon-card" data-page="midway">
+    <img src="/static/icons/midway.png">
+    <div>Midway</div>
+  </div>
+
+  <div class="icon-card logo-center">
+    <img src="/static/logo.png">
+  </div>
+
+  <div class="icon-card" data-page="animals">
+    <img src="/static/icons/animals.png">
+    <div>Animals</div>
+  </div>
+
+  <!-- ROW 4 -->
+  <div class="icon-card" data-page="sponsors">
+    <img src="/static/icons/sponsors.png">
+    <div>Sponsors</div>
+  </div>
+
+  <div class="icon-card" data-page="exhibits">
+    <img src="/static/icons/exhibits.png">
+    <div>Exhibits</div>
+  </div>
+
+  <div class="icon-card" data-page="business">
+    <img src="/static/icons/business.png">
+    <div>Business</div>
+  </div>
+
+  <!-- ROW 5 -->
+  <div class="icon-card" data-page="firstaid">
+    <img src="/static/icons/firstaid.png">
+    <div>First Aid</div>
+  </div>
+
+  <div class="icon-card" data-page="facilities">
+    <img src="/static/icons/facilities.png">
+    <div>Facilities</div>
+  </div>
+
+  <div class="icon-card" data-page="about">
+    <img src="/static/icons/about.png">
+    <div>About</div>
+  </div>
+
+</div>
+
 <br>
 
-<div class="menu">
-<button onclick="loadEvents()">📅 Today's Events</button>
-<button onclick="showExplore()">🔎 Explore</button>
-<button onclick="showMap()">🗺️ Map</button>
-<button onclick="loadSponsors()">💼 Sponsors</button>
-<button onclick="showMore()">➕ More</button>
-</div>
-
-<div class="content-spacer"></div>
-
-<div id="installBanner" style="display:none;">
-<button onclick="installApp()">🔔 Enable Notifications</button>
-</div>
-
+<!-- CONTENT AREA -->
 <div id="content"></div>
 
 <script src="/static/app.js"></script>

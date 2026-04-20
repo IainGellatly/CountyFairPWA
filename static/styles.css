@@ -2,8 +2,8 @@
 body{font-family:Arial;background:#f4f1e8;margin:0;text-align:center}
 
 .logo {
-  width: 60%;
-  max-width: 320px;   /* keeps it from getting huge on desktop */
+  width: 35%;
+  max-width: 160px;   /* keeps it from getting huge on desktop */
   margin: 10px auto;
   display: block;
 }
@@ -171,3 +171,37 @@ button:active {
   font-size: 0.4em;
 }
 
+.icon-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:14px;                 /* was 18px */
+  width:85%;                /* slightly narrower */
+  max-width:380px;          /* tighter layout */
+  margin:15px auto;
+}
+
+.icon-card img{
+  width:68px;               /* was 80px */
+  height:68px;
+}
+
+.icon-card div{
+  margin-top:4px;           /* tighter spacing */
+  font-size:15px;
+}
+
+.logo-center img{
+  width:76px;
+  height:76px;
+}
+
+.icon-card {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.icon-card img {
+  pointer-events: none;        /* 🔴 KEY FIX */
+  -webkit-user-drag: none;
+}

@@ -1,26 +1,104 @@
 
+import sys
 from database import get_db
 conn=get_db();c=conn.cursor()
 
-c.execute(
-    "CREATE TABLE IF NOT EXISTS commercial (name TEXT,description TEXT,location TEXT)")
-comm=[
+c.execute("drop table if exists subscriptions;")
+c.execute("""
+    CREATE TABLE subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        endpoint TEXT,
+        p256dh TEXT,
+        auth TEXT
+    );
+""")
+
+c.execute("drop table if exists alerts;")
+c.execute("""
+    CREATE TABLE alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        endpoint TEXT, 
+        event_id INTEGER,
+        up sent integer default 0
+    );
+""")
+
+c.execute("drop table if exists food;")
+c.execute("CREATE TABLE food (name TEXT,description TEXT,location TEXT);")
+food=[
+("BBQ Shack","Pulled pork & ribs","Food Court"),
+("Ice Cream Barn","Homemade ice cream","Back of Floral Hall"),
+("Corn Dogs","Classic fair food","Midway"),
+("Lemonade Stand","Fresh squeezed","Midway"),
+("Pizza Wagon","Wood fired pizza","Food Court")
+]
+for f in food:
+    c.execute("INSERT INTO food VALUES (?,?,?)", f)
+
+c.execute("drop table if exists exhibits;")
+c.execute("CREATE TABLE exhibits (name TEXT,description TEXT,location TEXT);")
+ex=[
+    ("Historic Palmyra","Local history exhibits","Floral Hall"),
+    ("Wayne County Sheriff","Home safety information","Floral Hall"),
+    ("Wayne County Social Services", "Health, crisis and family services", "Floral Hall"),
+    ("Wayne County 4-H", "4-H chapter", "4-H Building")
+]
+for x in ex:
+    c.execute("INSERT INTO exhibits VALUES (?,?,?)", x)
+
+c.execute("drop table if exists business;")
+c.execute("CREATE TABLE business (name TEXT,description TEXT,location TEXT);")
+bus=[
     ("Gutter Guardian","Home improvement experts","Commercial Building 1"),
     ("Mobile Mart","Cell phones and accessories","Commercial Building 2"),
     ("Wayne Landscaping Inc.","Landscaping and expert care","Commercial Building 2")
 ]
-for x in comm: c.execute(
-    "INSERT INTO commercial VALUES (?,?,?)",x)
+for b in bus:
+    c.execute("INSERT INTO business VALUES (?,?,?)", b)
 
-c.execute(
-    "CREATE TABLE IF NOT EXISTS organization (name TEXT,description TEXT,location TEXT)")
-org=[
-    ("Historic Palmyra","Local history exhibits","Floral Hall"),
-    ("Wayne County Sheriff","Home safety information","Floral Hall"),
-    ("American Legion Post 120","Veteran services organization","Floral Hall")
+c.execute("drop table if exists animals;")
+c.execute("CREATE TABLE animals (name TEXT,description TEXT,location TEXT);")
+anim=[
+("Smith Dairy", "Dairy cows","Cattle Building"),
+("Jones Acres", "Dairy cows", "Cattle Building"),
+("Hoover Farms", "Pigs and goats", "Farm Tent"),
+("Cluck Farms", "Prize chickens", "Farm Tent")
 ]
-for x in org: c.execute(
-    "INSERT INTO organization VALUES (?,?,?)",x)
+for a in anim:
+    c.execute("INSERT INTO animals VALUES (?,?,?)", a)
+
+c.execute("drop table if exists sponsors;")
+c.execute("""
+CREATE TABLE sponsors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    tier TEXT,
+    description TEXT,
+    logo TEXT,
+    website TEXT,
+    phone TEXT
+);
+""")
+spon = [
+    ("Wayne Bank", "Gold", "Local community bank serving Wayne County",
+     "/static/logos/bank.png", "https://example.com", "315-555-1234"),
+    ("AgriSupply Co.", "Gold", "Farm equipment and supplies",
+     "/static/logos/agri.png", "https://example.com", "315-555-5678"),
+    ("Palmyra Diner", "Silver", "Family dining and breakfast specials",
+     "/static/logos/diner.png", "https://example.com", "315-555-9012"),
+    ("County Hardware", "Silver", "Tools and hardware supplies",
+     "/static/logos/hardware.png", "https://example.com", "315-555-3456"),
+]
+for s in spon:
+    c.execute("""
+        INSERT INTO sponsors (name, tier, description, logo, website, phone)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, s)
+
+conn.commit();conn.close()
+print("DB ready")
+
+sys.exit()
 
 c.execute("""
     CREATE TABLE IF NOT EXISTS calendar (
@@ -46,32 +124,9 @@ for e in cal: c.execute(
     "INSERT INTO calendar (category,title,description,location,price,start_time,end_time) VALUES (?,?,?,?,?,?,?)",e)
 
 c.execute("CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,title TEXT,description TEXT,location TEXT,start_time TEXT, end_time text)")
-c.execute("CREATE TABLE IF NOT EXISTS food (name TEXT,description TEXT,location TEXT)")
+
 c.execute("CREATE TABLE IF NOT EXISTS music (name TEXT,description TEXT,location TEXT,datetime TEXT)")
-c.execute("CREATE TABLE IF NOT EXISTS animals (name TEXT,description TEXT,location TEXT)")
-# Sponsors table
-c.execute("""
-CREATE TABLE IF NOT EXISTS sponsors (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    tier TEXT,
-    description TEXT,
-    logo TEXT,
-    website TEXT,
-    phone TEXT
-)
-""")
 
-c.execute("""
-CREATE TABLE IF NOT EXISTS subscriptions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    endpoint TEXT,
-    p256dh TEXT,
-    auth TEXT
-)
-""")
-
-c.execute("CREATE TABLE IF NOT EXISTS alerts (id INTEGER PRIMARY KEY AUTOINCREMENT, endpoint TEXT, event_id INTEGER,up sent integer default 0);")
 
 c.execute("DELETE FROM events");c.execute("DELETE FROM food");c.execute("DELETE FROM music");c.execute("DELETE FROM exhibits")
 
@@ -86,14 +141,7 @@ events=[
 ]
 for e in events: c.execute("INSERT INTO events (title,description,location,start_time, end_time) VALUES (?,?,?,?,?)",e)
 
-food=[
-("BBQ Shack","Pulled pork & ribs","Food Court"),
-("Ice Cream Barn","Homemade ice cream","Back of Floral Hall"),
-("Corn Dogs","Classic fair food","Midway"),
-("Lemonade Stand","Fresh squeezed","Midway"),
-("Pizza Wagon","Wood fired pizza","Food Court")
-]
-for f in food: c.execute("INSERT INTO food VALUES (?,?,?)",f)
+
 
 music=[
 ("Bluegrass Boys","Live bluegrass","Floral Hall Back Porch","2:00-3:30 PM"),
@@ -102,35 +150,4 @@ music=[
 ]
 for m in music: c.execute("INSERT INTO music VALUES (?,?,?,?)",m)
 
-anim=[
-("Smith Dairy", "Dairy cows","Cattle Building"),
-("Jones Acres", "Dairy cows", "Cattle Building"),
-("Hoover Farms", "Pigs and goats", "Farm Tent"),
-("Cluck Farms", "Prize chickens", "Farm Tent")
-]
-for a in anim: c.execute("INSERT INTO animals VALUES (?,?,?)",a)
 
-c.execute("DELETE FROM sponsors")
-
-sponsors = [
-    ("Wayne Bank", "Gold", "Local community bank serving Wayne County",
-     "/static/logos/bank.png", "https://example.com", "315-555-1234"),
-
-    ("AgriSupply Co.", "Gold", "Farm equipment and supplies",
-     "/static/logos/agri.png", "https://example.com", "315-555-5678"),
-
-    ("Palmyra Diner", "Silver", "Family dining and breakfast specials",
-     "/static/logos/diner.png", "https://example.com", "315-555-9012"),
-
-    ("County Hardware", "Silver", "Tools and hardware supplies",
-     "/static/logos/hardware.png", "https://example.com", "315-555-3456"),
-]
-
-for s in sponsors:
-    c.execute("""
-        INSERT INTO sponsors (name, tier, description, logo, website, phone)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, s)
-
-conn.commit();conn.close()
-print("DB ready")

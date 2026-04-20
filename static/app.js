@@ -305,7 +305,7 @@ async function loadAnimals(){
 
   let h = '<h2>Animals</h2>';
   d.forEach(i => {
-    h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}<br>${i.category}</div>`;
+    h += `<div class="card"><b>${i.name}</b><br>${i.description}<br>${i.location}</div>`;
   });
 
   document.getElementById('exploreContent').innerHTML = h;
@@ -622,3 +622,102 @@ async function loadSponsors(){
   scrollToContent();
 }
 
+document.querySelectorAll(".icon-card").forEach(card => {
+
+  const page = card.dataset.page;
+  if (!page) return;
+
+  card.addEventListener("click", () => loadPage(page));
+});
+
+async function loadPage(page){
+
+  const content = document.getElementById("content");
+
+  // 🔴 DYNAMIC DATA PAGES
+  if (["food","exhibits","business","animals","sponsors"].includes(page)){
+
+    loadDynamic(page);
+    return;
+  }
+
+  // 🔴 STATIC PAGES (unchanged)
+  try {
+    const res = await fetch(`/static/${page}.html`);
+    const html = await res.text();
+
+    content.innerHTML = `<div class="card">${html}</div>`;
+    content.scrollIntoView({ behavior: "smooth" });
+
+  } catch {
+    content.innerHTML = `<div class="card">Content not available</div>`;
+  }
+}
+
+async function loadDynamic(type){
+
+  const content = document.getElementById("content");
+
+  // ---------------- SPONSORS (SPECIAL CASE)
+  if (type === "sponsors"){
+
+    let r = await fetch('/api/sponsors');
+    let d = await r.json();
+
+    let gold = '<h2>🥇 Gold Sponsors</h2>';
+    let silver = '<h2>🥈 Silver Sponsors</h2>';
+
+    d.forEach(s => {
+
+      let card = `
+        <div class="card sponsor">
+          <img src="${s.logo}" class="sponsor-logo"/><br>
+          <b>${s.name}</b><br>
+          ${s.description}<br>
+          <a href="${s.website}" target="_blank">🌐 Website</a><br>
+          📞 ${s.phone}
+        </div>
+      `;
+
+      if (s.tier.toLowerCase() === 'gold'){
+        gold += card;
+      } else {
+        silver += card;
+      }
+    });
+
+    content.innerHTML = gold + silver;
+    content.scrollIntoView({ behavior: "smooth" });
+
+    return;
+  }
+
+  // ---------------- STANDARD LISTS
+  let r = await fetch(`/api/${type}`);
+  let data = await r.json();
+
+  let titleMap = {
+    food: "Food Vendors",
+    exhibits: "Exhibits",
+    business: "Business",
+    animals: "Animals"
+  };
+
+  let h = `<h2>${titleMap[type]}</h2>`;
+
+  data.forEach(i => {
+    h += `
+      <div class="card">
+        <b>${i.name}</b><br>
+        ${i.description}<br>
+        ${i.location}
+      </div>
+    `;
+  });
+
+  content.innerHTML = h;
+  content.scrollIntoView({ behavior: "smooth" });
+}
+
+// Disable long-press context menu globally
+document.addEventListener("contextmenu", e => e.preventDefault());
