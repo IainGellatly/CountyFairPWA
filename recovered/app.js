@@ -909,15 +909,28 @@ async function loadTodayEvents(){
   }
 
   let events = await eventsRes.json();
-  let alertData = [];
+  let userAlerts = new Set();
 
   try {
-    alertData = await alertsRes.json();
-  } catch {}
+    const alertData = await alertsRes.json();
+    if (Array.isArray(alertData)) {
+      userAlerts = new Set(alertData);
+    }
+  } catch (e) {}
 
-  const userAlerts = new Set(alertData);
+  let h = '';
 
-  let h = `<h2>📅 Today's Events</h2>`;
+  if (!notificationsEnabled()) {
+    h += `
+      <div class="card" id="notifyCard">
+        🔔 <b>Get Event Reminders</b><br><br>
+        Tap to allow notifications<br><br>
+        <button onclick="installApp()">🔔 Enable Notifications</button>
+      </div>
+    `;
+  }
+
+  h += `<h2>📅 Today's Events</h2>`;
 
   events.forEach(e => {
 
@@ -925,15 +938,7 @@ async function loadTodayEvents(){
       ? "active-event"
       : "";
 
-    // ✅ RESTORE ORIGINAL BUTTON FUNCTION
-    let btn = renderAlertButton(e);
-
-    // ✅ APPLY ACTIVE STATE ONLY IF BUTTON EXISTS
-    if (btn && userAlerts.has(e.id)) {
-      btn = btn
-        .replace('class="alert-btn"', 'class="alert-btn active"')
-        .replace('🔔 Alert Me', 'Remove Alert');
-    }
+    const isActive = userAlerts.has(e.id);
 
     h += `
       <div class="card ${activeClass}">
@@ -943,13 +948,15 @@ async function loadTodayEvents(){
         ${e.price ? e.price + '<br>' : ''}
         ${formatTime12(e.start_time)} - ${formatTime12(e.end_time)}<br>
         ${getEventStatus(e.start_time, e.end_time)}<br><br>
-        ${btn}
+
+        <button class="alert-btn ${isActive ? 'active' : ''}" data-event-id="${e.id}">
+          ${isActive ? 'Remove Alert' : '🔔 Alert Me'}
+        </button>
       </div>
     `;
   });
 
   document.getElementById('content').innerHTML = h;
-  scrollToContent();
 
   document.querySelectorAll(".alert-btn").forEach(button => {
 

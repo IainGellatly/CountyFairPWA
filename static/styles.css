@@ -205,3 +205,8 @@ button:active {
   pointer-events: none;        /* 🔴 KEY FIX */
   -webkit-user-drag: none;
 }
+
+.ios-note {
+  background: #fff8e1;
+  border: 2px dashed #c8a96a;
+}
