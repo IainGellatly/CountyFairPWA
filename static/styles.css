@@ -149,13 +149,13 @@ button:active {
   position: absolute;   /* ✅ REQUIRED for tap positioning */
 
   background: white;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 2px;
+  border-radius: 3px;
 
-  max-width: 70px;      /* ✅ better for small popups */
+  max-width: 55px;      /* ✅ better for small popups */
   width: auto;          /* ✅ prevents stretching across screen */
 
-  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 3px 5px rgba(0,0,0,0.3);
 }
 
 @keyframes popIn{
@@ -164,11 +164,11 @@ button:active {
 }
 
 .poi-content h3{
-  font-size: 0.4em;
+  font-size: 0.3em;
 }
 
 .poi-content p{
-  font-size: 0.4em;
+  font-size: 0.3em;
 }
 
 .icon-grid{
@@ -209,4 +209,27 @@ button:active {
 .ios-note {
   background: #fff8e1;
   border: 2px dashed #c8a96a;
+}
+
+/* Footer logo */
+#footerLogo {
+  width: 100%;
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+#footerLogo img {
+  width: 60px;              /* small size */
+  opacity: 0.85;
+}
+
+#footerLogo img:active {
+  transform: scale(0.95);
+}
+
+.footer-text {
+  font-size: 8px;        /* ~8pt equivalent on mobile */
+  color: #777;
+  margin-top: 5px;
 }

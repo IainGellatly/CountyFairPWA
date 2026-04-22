@@ -169,7 +169,7 @@ async function loadEvents(){
     `;
   }
 
-  h += `<h2>📅 Today's Events</h2>`;
+  h += `<h2>Today's Events</h2>`;
 
   events.forEach(e => {
 
@@ -524,10 +524,17 @@ function showPOIPopup(poi, event){
   document.body.appendChild(popup);
 
   // 👉 Position near tap
-  const x = event.clientX;
-  const y = event.clientY;
+let x, y;
 
-  content.style.position = 'absolute';
+if (event.touches && event.touches.length > 0) {
+  x = event.touches[0].clientX;
+  y = event.touches[0].clientY;
+} else {
+  x = event.clientX;
+  y = event.clientY;
+}
+
+  content.style.position = 'fixed';
   content.style.left = x + 'px';
   content.style.top = y + 'px';
   content.style.transform = 'translate(-50%, -110%)'; // above finger
@@ -676,12 +683,15 @@ async function loadSponsors(){
   scrollToContent();
 }
 
-document.querySelectorAll(".icon-card").forEach(card => {
+document.addEventListener("click", function(e){
 
-  const page = card.dataset.page;
+  const card = e.target.closest(".icon-card");
+  if (!card) return;
+
+  const page = card.getAttribute("data-page");
   if (!page) return;
 
-  card.addEventListener("click", () => loadPage(page));
+  loadPage(page);
 });
 
 async function loadPage(page){
@@ -917,7 +927,7 @@ async function loadTodayEvents(){
 
   const userAlerts = new Set(alertData);
 
-  let h = `<h2>📅 Today's Events</h2>`;
+  let h = `<h2>Today's Events</h2>`;
 
   events.forEach(e => {
 
@@ -942,7 +952,7 @@ async function loadTodayEvents(){
         ${renderLine(e.location)}
         ${e.price ? e.price + '<br>' : ''}
         ${formatTime12(e.start_time)} - ${formatTime12(e.end_time)}<br>
-        ${getEventStatus(e.start_time, e.end_time)}<br><br>
+        ${getEventStatus(e.start_time, e.end_time)}<br>
         ${btn}
       </div>
     `;
@@ -992,6 +1002,18 @@ async function loadTodayEvents(){
       }
     });
   });
+}
+
+function goHome(){
+  // Return to main menu
+  document.getElementById('content').innerHTML = '';
+
+  // If you have a specific home loader, use it:
+  if (typeof loadEvents === 'function'){
+    loadEvents();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderLine(val){
