@@ -497,7 +497,13 @@ POIS.forEach(poi => {
   z.style.width = poi.width + '%';
   z.style.height = poi.height + '%';
 
-  z.addEventListener('click', (e) => showPOIPopup(poi, e));
+  z.addEventListener('click', (e) => {
+
+  // 🔴 Ignore bogus iOS click after pinch (0,0 coordinates)
+  if (e.clientX === 0 && e.clientY === 0) return;
+
+  showPOIPopup(poi, e);
+  });
 
   mapEl.appendChild(z);
 });
@@ -524,14 +530,14 @@ function showPOIPopup(poi, event){
   document.body.appendChild(popup);
 
   // 👉 Position near tap
-let x, y;
+let x = event.clientX || 0;
+let y = event.clientY || 0;
 
-if (event.touches && event.touches.length > 0) {
-  x = event.touches[0].clientX;
-  y = event.touches[0].clientY;
-} else {
-  x = event.clientX;
-  y = event.clientY;
+// iOS first-tap fix: if coordinates are zero, derive from tapped zone
+if (x === 0 && y === 0 && event.target) {
+  const r = event.target.getBoundingClientRect();
+  x = r.left + r.width / 2;
+  y = r.top + r.height / 2;
 }
 
   content.style.position = 'fixed';
@@ -683,15 +689,12 @@ async function loadSponsors(){
   scrollToContent();
 }
 
-document.addEventListener("click", function(e){
+document.querySelectorAll(".icon-card").forEach(card => {
 
-  const card = e.target.closest(".icon-card");
-  if (!card) return;
-
-  const page = card.getAttribute("data-page");
+  const page = card.dataset.page;
   if (!page) return;
 
-  loadPage(page);
+  card.addEventListener("click", () => loadPage(page));
 });
 
 async function loadPage(page){
@@ -902,7 +905,16 @@ async function loadMusicEvents(){
 
 async function loadTodayEvents(){
 
-  const endpoint = await getEndpoint();
+    let endpoint = null;
+
+    try {
+      endpoint = await Promise.race([
+        getEndpoint(),
+        new Promise(resolve => setTimeout(() => resolve(null), 1000))
+      ]);
+    } catch {
+      endpoint = null;
+    }
 
   let eventsRes, alertsRes;
 
